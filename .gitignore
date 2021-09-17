@@ -1,0 +1,2 @@
+/aws_production/.terraform/
+/aws_production/.terraform.lock.hcl

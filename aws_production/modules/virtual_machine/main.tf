@@ -101,6 +101,14 @@ resource "aws_instance" "production_server" {
     ]
   }
 
+  connection {
+      type        = "ssh"
+      host        = self.public_ip
+      user        = "ubuntu"
+      private_key = tls_private_key.ssh_key_prod.private_key_pem
+      timeout     = "4m"
+   }
+
   tags = {
     Name = "${var.prefix} server"
   }

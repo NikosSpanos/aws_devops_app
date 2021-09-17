@@ -45,4 +45,8 @@ resource "aws_db_instance" "mysql_server_prod" {
   skip_final_snapshot    = true
   vpc_security_group_ids = [var.vm_instance.sg_prod.id]
   availability_zone      = var.location
+
+  tags = {
+    Name = "${var.prefix}_mysql_server"
+  }
 }
