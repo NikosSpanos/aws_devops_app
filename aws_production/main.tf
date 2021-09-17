@@ -25,7 +25,6 @@ module "virtual_machines" {
     source = "./modules/virtual_machine"
     location = var.location
     prefix = var.prefix
-    admin_username = var.admin_username
 }
 
 module "mysql" {
