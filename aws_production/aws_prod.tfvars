@@ -11,6 +11,8 @@ Variable 2: credentials path
 Variable 3: location
 --description: availability zone of AWS instances
 --values accepted: us-east-2a
+
+Issue: For some reason .tfvars file is not recognized by terraform plan. Thus, a variables.tf should be created
 */
 prefix = "production"
 credentials_path = "$HOME/.aws/credentials"
