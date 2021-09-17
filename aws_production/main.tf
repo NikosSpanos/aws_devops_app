@@ -6,10 +6,6 @@ terraform {
       version = "~> 3.0"
     }
   }
-  provider "aws"{
-      region = "us-east-2" //configure aws cli => https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2-linux.html
-      shared_credentials_file = var.credentials_path
-  }
   backend "remote" {
     organization = "codehub-spanos"
 
@@ -18,6 +14,12 @@ terraform {
     }
   }
 }
+
+provider "aws"{
+      region = var.location //configure aws cli => https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2-linux.html
+      shared_credentials_file = var.credentials_path
+      profile = "default"
+  }
 
 module "virtual_machines" {
     source = "./modules/virtual_machine"
