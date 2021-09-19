@@ -17,7 +17,7 @@ resource "random_string" "string_server" {
 }
 
 resource "aws_db_parameter_group" "db_param_group_prod" {
-  name   = "rds_pg_prod"
+  name   = "rds-pg-prod"
   family = "mysql5.7"
 
   parameter {

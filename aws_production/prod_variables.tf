@@ -12,3 +12,15 @@ variable "credentials_path" {
   type        = string
   sensitive   = true
 }
+
+variable "mysql_master_username" {
+  description = "Server administrator username"
+  type        = string
+  sensitive   = true
+}
+
+variable "mysql_master_password" {
+  description = "Server administrator password"
+  type        = string
+  sensitive   = true
+}

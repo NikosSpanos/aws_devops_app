@@ -28,8 +28,8 @@ resource "aws_security_group" "sg_prod" {
 # Create first security rule to open port 22
 resource "aws_security_group_rule" "ssh_rule_prod" {
   type              = "ingress"
-  from_port         = "*"
-  to_port           = "22"
+  from_port         = 0
+  to_port           = 22
   protocol          = "tcp"
   cidr_blocks       = [aws_vpc.vpc_prod.cidr_block]
   security_group_id = aws_security_group.sg_prod.id
@@ -39,8 +39,8 @@ resource "aws_security_group_rule" "ssh_rule_prod" {
 # Create second security rule to open port 8080 for jenkins and the application app
 resource "aws_security_group_rule" "http_rule_prod" {
   type              = "ingress"
-  from_port         = "*"
-  to_port           = "8080"
+  from_port         = 0
+  to_port           = 8080
   protocol          = "tcp"
   cidr_blocks       = [aws_vpc.vpc_prod.cidr_block]
   security_group_id = aws_security_group.sg_prod.id
