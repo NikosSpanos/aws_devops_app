@@ -37,7 +37,7 @@ resource "aws_db_instance" "mysql_server_prod" {
   engine                 = "mysql"
   engine_version         = "5.7"
   instance_class         = "db.t2.micro"
-  name                   = "${random_string.string_server.result}-mysqlDB"
+  name                   = "${random_string.string_server.result}MysqlDB"
   username               = var.mysql_master_username
   password               = var.mysql_master_password
   parameter_group_name   = aws_db_parameter_group.db_param_group_prod.id

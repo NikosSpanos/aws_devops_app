@@ -28,6 +28,7 @@ provider "aws"{
 module "virtual_machines" {
     source = "./modules/virtual_machine"
     location = var.location
+    location_sg = var.location_sg
     prefix = var.prefix
 }
 

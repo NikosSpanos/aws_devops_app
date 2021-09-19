@@ -3,6 +3,12 @@ variable "location" {
   default = "us-east-2"
 }
 
+variable "location_sg" {
+  //should be declared in tfvars file to variables.tf
+	description = "Resource allocation zone for Security Group (SG) in AWS"
+  default = "us-east-2a"
+}
+
 variable "prefix" {
   description = "Resource group prefix (i.e development/ production)"
 }

@@ -16,7 +16,7 @@ resource "aws_vpc" "vpc_prod" {
 resource "aws_subnet" "subnet_prod" {
   vpc_id            = aws_vpc.vpc_prod.id
   cidr_block        = "10.0.1.0/24"
-  availability_zone = var.location
+  availability_zone = var.location_sg
 }
 
 # Create security group
