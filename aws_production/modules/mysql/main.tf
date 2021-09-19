@@ -44,7 +44,7 @@ resource "aws_db_instance" "mysql_server_prod" {
   publicly_accessible    = true
   skip_final_snapshot    = true
   vpc_security_group_ids = [var.vm_instance_sg] //in order to use security group id here, we need to first export it as output in the vm module (where we first created this security group)
-  availability_zone      = var.location
+  availability_zone      = var.location_sg
 
   tags = {
     Name = "${var.prefix}_mysql_server"
