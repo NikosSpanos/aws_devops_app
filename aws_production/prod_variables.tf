@@ -1,6 +1,6 @@
 variable "location" {
 	description = "Resource allocation zone in AWS"
-    default = "us-east-2a"
+    default = "us-east-2"
 }
 
 variable "prefix" {

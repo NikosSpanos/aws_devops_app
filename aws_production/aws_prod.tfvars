@@ -16,4 +16,4 @@ Issue: For some reason .tfvars file is not recognized by terraform plan. Thus, a
 */
 prefix = "production"
 credentials_path = "$HOME/.aws/credentials"
-location = "us-east-2a"
+location = "us-east-2"
