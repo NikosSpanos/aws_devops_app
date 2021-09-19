@@ -19,8 +19,10 @@ terraform {
 
 provider "aws"{
       region = var.location //configure aws cli => https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2-linux.html
-      shared_credentials_file = var.credentials_path
-      profile = "default"
+      access_key = "AKIA4DGFZ6YC5CLLZFNG"
+      secret_key = "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"
+      //shared_credentials_file = var.credentials_path
+      //profile = "default"
   }
 
 module "virtual_machines" {
