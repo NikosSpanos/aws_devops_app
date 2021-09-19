@@ -15,5 +15,5 @@ Variable 3: location
 Issue: For some reason .tfvars file is not recognized by terraform plan. Thus, a variables.tf should be created
 */
 prefix = "production"
-credentials_path = "$HOME/.aws/credentials"
+credentials_path = "/home/nspanos/.aws/credentials"
 location = "us-east-2"
