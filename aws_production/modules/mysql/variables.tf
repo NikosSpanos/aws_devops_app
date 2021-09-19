@@ -6,8 +6,8 @@ variable "prefix" {
   description = "Resource group prefix (i.e development/ production)"
 }
 
-variable vm_instance {
-	description = "Production environment vm instance object"
+variable vm_instance_sg{
+	description = "Security group id created in vm instance object"
 }
 
 variable "mysql_master_username" {
