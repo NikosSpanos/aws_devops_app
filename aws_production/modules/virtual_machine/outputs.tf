@@ -9,3 +9,7 @@ output "tls_public_key_public" {
 output "public_ip_address" {
   value = aws_instance.production_server.public_ip
 }
+
+output "security_group_id" {
+  value = aws_security_group.sg_prod.id
+}

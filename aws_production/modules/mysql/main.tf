@@ -43,7 +43,7 @@ resource "aws_db_instance" "mysql_server_prod" {
   parameter_group_name   = aws_db_parameter_group.db_param_group_prod.id
   publicly_accessible    = true
   skip_final_snapshot    = true
-  vpc_security_group_ids = [var.vm_instance.sg_prod.id]
+  vpc_security_group_ids = [var.vm_instance_sg] //in order to use security group id here, we need to first export it as output in the vm module (where we first created this security group)
   availability_zone      = var.location
 
   tags = {

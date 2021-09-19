@@ -33,7 +33,7 @@ module "virtual_machines" {
 
 module "mysql" {
     source = "./modules/mysql"
-    vm_instance = module.virtual_machines
+    vm_instance_sg = module.virtual_machines.security_group_id
     location = var.location
     prefix = var.prefix
     mysql_master_username = var.mysql_master_username
