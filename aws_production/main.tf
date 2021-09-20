@@ -35,10 +35,10 @@ module "virtual_machines" {
 module "mysql" {
     source = "./modules/mysql"
     vm_instance_sg = module.virtual_machines.security_group_id
-    ec2_instance_subnet = module.virtual_machines.subnet_id
     location = var.location
     location_sg = var.location_sg
     prefix = var.prefix
     mysql_master_username = var.mysql_master_username
     mysql_master_password = var.mysql_master_password
+    ec2_instance_subnet = module.virtual_machines.subnet_id
 }
