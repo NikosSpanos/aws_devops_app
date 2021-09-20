@@ -31,6 +31,15 @@ resource "aws_db_parameter_group" "db_param_group_prod" {
   }
 }
 
+resource "aws_db_subnet_group" "default" {
+  name       = "db-ec2-subnet-group"
+  subnet_ids = [var.ec2_instance_subnet]
+
+  tags = {
+    Name = "My DB subnet group"
+  }
+}
+
 #MySQL Server
 resource "aws_db_instance" "mysql_server_prod" {
   allocated_storage      = 5120
@@ -45,6 +54,7 @@ resource "aws_db_instance" "mysql_server_prod" {
   skip_final_snapshot    = true
   vpc_security_group_ids = [var.vm_instance_sg] //in order to use security group id here, we need to first export it as output in the vm module (where we first created this security group)
   availability_zone      = var.location_sg
+  db_subnet_group_name   = aws_db_subnet_group.default.name
 
   tags = {
     Name = "${var.prefix}_mysql_server"

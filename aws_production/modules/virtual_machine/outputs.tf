@@ -13,3 +13,11 @@ output "public_ip_address" {
 output "security_group_id" {
   value = aws_security_group.sg_prod.id
 }
+
+output "subnet_id" {
+  value = aws_subnet.subnet_prod.id
+}
+
+output "ec2_instance_availability_zone" {
+  value = aws_instance.production_server.availability_zone
+}

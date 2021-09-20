@@ -76,8 +76,7 @@ resource "aws_instance" "production_server" {
   ami               = "ami-00399ec92321828f5" # us-east-2
   instance_type     = "t2.micro"
   key_name          = aws_key_pair.generated_key_prod.key_name
-  availability_zone = var.location
-
+  
   network_interface {
     network_interface_id = aws_network_interface.nic_prod.id
     device_index         = 0
