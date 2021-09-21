@@ -120,9 +120,9 @@ resource "aws_eip" "prod_server_public_ip" {
   depends_on        = [aws_internet_gateway.gw, aws_instance.production_server]
 }
 
-data "template_file" "user_data" {
-  template = file("/home/nspanos/Documents/DevOps_AWS/aws_devops_app/aws_production/modules/virtual_machine/install_modules_1.sh")
-}
+# data "template_file" "user_data" {
+#   template = file("/home/nspanos/Documents/DevOps_AWS/aws_devops_app/aws_production/modules/virtual_machine/install_modules_1.sh")
+# }
 
 resource "aws_instance" "production_server" {
   ami               = data.aws_ami.ubuntu-server.id
