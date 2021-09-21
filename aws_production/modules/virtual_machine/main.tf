@@ -32,7 +32,7 @@ resource "aws_subnet" "subnet_prod" {
 
 resource "aws_subnet" "subnet_prod_id2" {
   vpc_id            = aws_vpc.vpc_prod.id
-  cidr_block        = "10.0.1.0/24"
+  cidr_block        = "10.0.2.0/24"
   availability_zone = data.aws_availability_zones.available.names[1]
 
   depends_on = [aws_internet_gateway.gw]
