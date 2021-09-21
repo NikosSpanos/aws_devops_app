@@ -17,3 +17,8 @@ output "output_public_key" {
 output "output_public_ip" {
   value = module.virtual_machines.public_ip_address
 }
+
+output "output_public_dns_address" {
+  sensitive = true
+  value = module.virtual_machines.server_dns_public_address
+}

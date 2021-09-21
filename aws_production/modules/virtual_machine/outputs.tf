@@ -33,3 +33,7 @@ output "eip_address" {
 output "subnet_id2" {
   value = aws_subnet.subnet_prod_id2.id
 }
+
+output "server_dns_public_address" {
+  value = aws_instance.production_server.public_dns
+}
