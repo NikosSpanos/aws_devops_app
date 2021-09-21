@@ -127,10 +127,10 @@ resource "aws_instance" "production_server" {
   key_name          = aws_key_pair.generated_key_prod.key_name
   subnet_id         = aws_subnet.subnet_prod.id
 
-  network_interface {
-    network_interface_id = aws_network_interface.nic_prod.id
-    device_index         = 0
-  }
+  # network_interface {
+  #   network_interface_id = aws_network_interface.nic_prod.id
+  #   device_index         = 0
+  # }
 
   connection {
       type        = "ssh"
