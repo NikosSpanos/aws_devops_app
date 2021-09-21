@@ -120,6 +120,10 @@ resource "aws_eip" "prod_server_public_ip" {
   depends_on        = [aws_internet_gateway.gw, aws_instance.production_server]
 }
 
+data "template_file" "user_data" {
+  template = file("/home/nspanos/Documents/DevOps_AWS/aws_devops_app/aws_production/modules/virtual_machine/install_modules_1.sh")
+}
+
 resource "aws_instance" "production_server" {
   ami               = data.aws_ami.ubuntu-server.id
   instance_type     = "t2.micro"
@@ -132,7 +136,19 @@ resource "aws_instance" "production_server" {
   #   device_index         = 0
   # }
 
-  user_data = "${file("/home/nspanos/Documents/DevOps_AWS/aws_devops_app/aws_production/modules/virtual_machine/install_modules_1.sh")}"
+  //user_data = file("./install_modules_1.sh")
+  //user_data = data.template_file.user_data.rendered
+  user_data= <<EOF
+		#! /bin/bash
+    sudo apt-get update
+    sudo apt-get install -y openjdk-8-jdk
+    sudo apt install -y python2.7 python-pip
+    sudo apt install -y docker.io
+    sudo systemctl start docker
+    sudo systemctl enable docker
+    pip install setuptools
+    echo "Modules installed via Terraform"
+	EOF
 
   tags = {
     Name = "${var.prefix} server"
