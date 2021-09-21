@@ -39,7 +39,7 @@ resource "aws_security_group" "sg_prod" {
 # Create first security rule to open port 22
 resource "aws_security_group_rule" "ssh_rule_prod" {
   type              = "ingress"
-  from_port         = 0
+  from_port         = 22
   to_port           = 22
   protocol          = "tcp"
   cidr_blocks       = [aws_vpc.vpc_prod.cidr_block]
@@ -50,7 +50,7 @@ resource "aws_security_group_rule" "ssh_rule_prod" {
 # Create second security rule to open port 8080 for jenkins and the application app
 resource "aws_security_group_rule" "http_rule_prod" {
   type              = "ingress"
-  from_port         = 0
+  from_port         = 8080
   to_port           = 8080
   protocol          = "tcp"
   cidr_blocks       = [aws_vpc.vpc_prod.cidr_block]
@@ -121,7 +121,7 @@ resource "aws_eip" "prod_server_public_ip" {
 }
 
 resource "aws_instance" "production_server" {
-  //depends_on        = [aws_eip.prod_server_public_ip]
+  depends_on        = [aws_eip.prod_server_public_ip]
   ami               = data.aws_ami.ubuntu-server.id
   instance_type     = "t2.micro"
   key_name          = aws_key_pair.generated_key_prod.key_name
@@ -145,7 +145,7 @@ resource "null_resource" "install_modules" {
     //host        = "${self.public_ip}"
     user        = "ubuntu"
     private_key = "${chomp(tls_private_key.ssh_key_prod.private_key_pem)}" //tls_private_key.ssh_key_prod.private_key_pem
-    timeout     = "1m"
+    timeout     = "6m"
   }
 
   provisioner "remote-exec" {
