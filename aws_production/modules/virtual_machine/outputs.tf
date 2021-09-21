@@ -21,3 +21,7 @@ output "subnet_id" {
 output "ec2_instance_availability_zone" {
   value = aws_instance.production_server.availability_zone
 }
+
+output "subnet_availability_zone" {
+  value = aws_subnet.subnet_prod.availability_zone
+}

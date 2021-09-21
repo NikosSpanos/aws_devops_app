@@ -29,3 +29,7 @@ variable "mysql_master_password" {
   type        = string
   sensitive   = true
 }
+
+variable "subnet_availability_zone"{
+	description = "Availability zone of subnet"
+}

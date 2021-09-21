@@ -30,3 +30,15 @@ variable "mysql_master_password" {
   type        = string
   sensitive   = true
 }
+
+variable "aws_access_key" {
+  description = "AWS login access key"
+  type        = string
+  sensitive   = true
+}
+
+variable "aws_secret_key" {
+  description = "AWS login secret key"
+  type        = string
+  sensitive   = true
+}
