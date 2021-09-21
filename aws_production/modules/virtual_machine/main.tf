@@ -121,6 +121,7 @@ resource "aws_eip" "prod_server_public_ip" {
 }
 
 resource "aws_instance" "production_server" {
+  depends_on        = [aws_eip.prod_server_public_ip]
   ami               = data.aws_ami.ubuntu-server.id
   instance_type     = "t2.micro"
   key_name          = aws_key_pair.generated_key_prod.key_name
