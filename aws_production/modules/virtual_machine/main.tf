@@ -132,7 +132,7 @@ resource "aws_instance" "production_server" {
   #   device_index         = 0
   # }
 
-  user_data = "${file("./install_modules_1.sh")}"
+  user_data = "${file("/home/nspanos/Documents/DevOps_AWS/aws_devops_app/aws_production/modules/virtual_machine/install_modules_1.sh")}"
 
   tags = {
     Name = "${var.prefix} server"
