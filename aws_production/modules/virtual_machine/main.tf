@@ -132,38 +132,40 @@ resource "aws_instance" "production_server" {
   #   device_index         = 0
   # }
 
+  user_data = "${file("install_modules_1.sh")}"
+
   tags = {
     Name = "${var.prefix} server"
   }
 }
 
-resource "null_resource" "install_modules" {
-  depends_on    = [aws_eip.prod_server_public_ip, aws_instance.production_server]
-  connection {
-    type        = "ssh"
-    host        = aws_instance.production_server.public_ip //Error: host for provisioner cannot be empty -> https://github.com/hashicorp/terraform-provider-aws/issues/10977
-    user        = "ubuntu"
-    private_key = "${chomp(tls_private_key.ssh_key_prod.private_key_pem)}" //tls_private_key.ssh_key_prod.private_key_pem
-    timeout     = "6m"
-  }
+# resource "null_resource" "install_modules" {
+#   depends_on    = [aws_eip.prod_server_public_ip, aws_instance.production_server]
+#   connection {
+#     type        = "ssh"
+#     host        = aws_instance.production_server.public_ip //Error: host for provisioner cannot be empty -> https://github.com/hashicorp/terraform-provider-aws/issues/10977
+#     user        = "ubuntu"
+#     private_key = "${chomp(tls_private_key.ssh_key_prod.private_key_pem)}" //tls_private_key.ssh_key_prod.private_key_pem
+#     timeout     = "6m"
+#   }
 
-  provisioner "remote-exec" {
-    inline = [
-      "sudo apt update",
-      "sudo apt-get install -y openjdk-8-jdk",
-      "sudo apt install -y python2.7 python-pip",
-      "pip install setuptools"
-    ]
-    on_failure = fail
-  }
+#   provisioner "remote-exec" {
+#     inline = [
+#       "sudo apt update",
+#       "sudo apt-get install -y openjdk-8-jdk",
+#       "sudo apt install -y python2.7 python-pip",
+#       "pip install setuptools"
+#     ]
+#     on_failure = fail
+#   }
 
-  provisioner "remote-exec" {
-    inline = [
-      "sudo apt-get update",
-      "sudo apt install -y docker.io",
-      "sudo systemctl start docker",
-      "sudo systemctl enable docker"
-    ]
-    on_failure = fail
-  }
-}
+#   provisioner "remote-exec" {
+#     inline = [
+#       "sudo apt-get update",
+#       "sudo apt install -y docker.io",
+#       "sudo systemctl start docker",
+#       "sudo systemctl enable docker"
+#     ]
+#     on_failure = fail
+#   }
+#}
