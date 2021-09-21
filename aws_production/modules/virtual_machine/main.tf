@@ -113,13 +113,6 @@ data "aws_ami" "ubuntu-server" {
   }
 }
 
-resource "aws_eip" "prod_server_public_ip" {
-  instance          = aws_instance.production_server.id
-  vpc               = true
-  network_interface = aws_network_interface.nic_prod.id
-  depends_on        = [aws_internet_gateway.gw]
-}
-
 resource "aws_instance" "production_server" {
   depends_on        = [aws_eip.prod_server_public_ip]
   ami               = data.aws_ami.ubuntu-server.id
@@ -134,7 +127,8 @@ resource "aws_instance" "production_server" {
 
   connection {
       type        = "ssh"
-      host        = aws_eip.prod_server_public_ip.public_ip //Error: host for provisioner cannot be empty -> https://github.com/hashicorp/terraform-provider-aws/issues/10977
+      //host        = aws_eip.prod_server_public_ip.public_ip //Error: host for provisioner cannot be empty -> https://github.com/hashicorp/terraform-provider-aws/issues/10977
+      host        = "${self.public_ip}"
       user        = "ubuntu"
       private_key = "${chomp(tls_private_key.ssh_key_prod.private_key_pem)}" //tls_private_key.ssh_key_prod.private_key_pem
       timeout     = "1m"
@@ -161,4 +155,11 @@ resource "aws_instance" "production_server" {
   tags = {
     Name = "${var.prefix} server"
   }
+}
+
+resource "aws_eip" "prod_server_public_ip" {
+  instance          = aws_instance.production_server.id
+  vpc               = true
+  network_interface = aws_network_interface.nic_prod.id
+  depends_on        = [aws_internet_gateway.gw]
 }
