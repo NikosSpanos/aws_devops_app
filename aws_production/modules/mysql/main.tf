@@ -34,7 +34,6 @@ resource "aws_db_parameter_group" "db_param_group_prod" {
 resource "aws_db_subnet_group" "default" {
   name              = "db-ec2-subnet-group"
   subnet_ids        = [var.ec2_instance_subnet, var.ec2_instance_subnet_id2]
-  availability_zone = var.subnet_availability_zone
 
   tags = {
     Name = "DB subnet group"
