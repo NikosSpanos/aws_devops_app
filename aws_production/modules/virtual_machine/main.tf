@@ -30,6 +30,14 @@ resource "aws_subnet" "subnet_prod" {
   depends_on = [aws_internet_gateway.gw]
 }
 
+resource "aws_subnet" "subnet_prod_id2" {
+  vpc_id            = aws_vpc.vpc_prod.id
+  cidr_block        = "10.0.1.0/24"
+  availability_zone = data.aws_availability_zones.available.names[1]
+
+  depends_on = [aws_internet_gateway.gw]
+}
+
 # Create security group
 resource "aws_security_group" "sg_prod" {
     name = "${var.prefix}_network_security_group"
@@ -140,6 +148,7 @@ resource "aws_instance" "production_server" {
   //user_data = data.template_file.user_data.rendered
   user_data= <<EOF
 		#! /bin/bash
+    echo "Installing modules..."
     sudo apt-get update
     sudo apt-get install -y openjdk-8-jdk
     sudo apt install -y python2.7 python-pip

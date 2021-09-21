@@ -29,3 +29,7 @@ output "subnet_availability_zone" {
 output "eip_address" {
   value = aws_eip.prod_server_public_ip.public_ip
 }
+
+output "subnet_id2" {
+  value = aws_subnet.subnet_prod_id2.id
+}

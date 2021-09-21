@@ -42,4 +42,5 @@ module "mysql" {
     mysql_master_password = var.mysql_master_password
     ec2_instance_subnet = module.virtual_machines.subnet_id
     subnet_availability_zone = module.virtual_machines.subnet_availability_zone
+    ec2_instance_subnet_id2 = module.virtual_machines.subnet_id2
 }

@@ -33,3 +33,8 @@ variable "mysql_master_password" {
 variable "subnet_availability_zone"{
 	description = "Availability zone of subnet"
 }
+
+
+variable "ec2_instance_subnet_id2"{
+	description = "Second subnet id created in vm instance object"
+}
