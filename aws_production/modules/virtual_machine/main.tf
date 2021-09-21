@@ -10,6 +10,8 @@ terraform {
 # Create virtual private cloud (vpc)
 resource "aws_vpc" "vpc_prod" {
   cidr_block = "10.0.0.0/16"
+  enable_dns_hostnames = true
+  enable_dns_support = true
 }
 
 # Assign gateway to vp
@@ -32,7 +34,7 @@ resource "aws_subnet" "subnet_prod" {
 
 resource "aws_subnet" "subnet_prod_id2" {
   vpc_id            = aws_vpc.vpc_prod.id
-  cidr_block        = "10.0.2.0/24"
+  cidr_block        = "10.0.2.0/24" //a second subnet can't use the same cidr block as the first subnet
   availability_zone = data.aws_availability_zones.available.names[1]
 
   depends_on = [aws_internet_gateway.gw]
