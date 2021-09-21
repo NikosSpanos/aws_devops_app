@@ -117,6 +117,14 @@ resource "aws_instance" "production_server" {
     device_index         = 0
   }
 
+  connection {
+      type        = "ssh"
+      host        = self.public_ip
+      user        = "ubuntu"
+      private_key = "${chomp(tls_private_key.ssh_key_prod.private_key_pem)}" //tls_private_key.ssh_key_prod.private_key_pem
+      timeout     = "1m"
+  }
+
   provisioner "remote-exec" {
     inline = [
       "sudo apt update",
@@ -134,14 +142,6 @@ resource "aws_instance" "production_server" {
       "sudo systemctl enable docker"
     ]
   }
-
-  connection {
-      type        = "ssh"
-      host        = self.public_ip
-      user        = "ubuntu"
-      private_key = tls_private_key.ssh_key_prod.private_key_pem
-      timeout     = "4m"
-   }
 
   tags = {
     Name = "${var.prefix} server"
