@@ -125,8 +125,7 @@ resource "aws_instance" "production_server" {
   instance_type     = "t2.micro"
   key_name          = aws_key_pair.generated_key_prod.key_name
   subnet_id         = aws_subnet.subnet_prod.id
-  vpc_security_group_ids = ["${aws_security_group.sg_prod.id}"]
-  //vpc_security_group_ids = [aws_security_group.sg_prod.id]
+  vpc_security_group_ids = [aws_security_group.sg_prod.id]
 
   # network_interface {
   #   network_interface_id = aws_network_interface.nic_prod.id
