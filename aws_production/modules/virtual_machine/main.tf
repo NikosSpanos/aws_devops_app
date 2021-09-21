@@ -113,12 +113,12 @@ data "aws_ami" "ubuntu-server" {
   }
 }
 
-# resource "aws_eip" "prod_server_public_ip" {
-#   instance          = aws_instance.production_server.id
-#   vpc               = true
-#   network_interface = aws_network_interface.nic_prod.id
-#   depends_on        = [aws_internet_gateway.gw]
-# }
+resource "aws_eip" "prod_server_public_ip" {
+  instance          = aws_instance.production_server.id
+  vpc               = true
+  network_interface = aws_network_interface.nic_prod.id
+  depends_on        = [aws_internet_gateway.gw]
+}
 
 resource "aws_instance" "production_server" {
   //depends_on        = [aws_eip.prod_server_public_ip]
@@ -132,13 +132,20 @@ resource "aws_instance" "production_server" {
   #   device_index         = 0
   # }
 
+  tags = {
+    Name = "${var.prefix} server"
+  }
+}
+
+resource "null_resource" "install_modules" {
+  depends_on    = [aws_eip.prod_server_public_ip, aws_instance.production_server]
   connection {
-      type        = "ssh"
-      //host        = aws_eip.prod_server_public_ip.public_ip //Error: host for provisioner cannot be empty -> https://github.com/hashicorp/terraform-provider-aws/issues/10977
-      host        = "${self.public_ip}"
-      user        = "ubuntu"
-      private_key = "${chomp(tls_private_key.ssh_key_prod.private_key_pem)}" //tls_private_key.ssh_key_prod.private_key_pem
-      timeout     = "1m"
+    type        = "ssh"
+    host        = aws_eip.prod_server_public_ip.public_ip //Error: host for provisioner cannot be empty -> https://github.com/hashicorp/terraform-provider-aws/issues/10977
+    //host        = "${self.public_ip}"
+    user        = "ubuntu"
+    private_key = "${chomp(tls_private_key.ssh_key_prod.private_key_pem)}" //tls_private_key.ssh_key_prod.private_key_pem
+    timeout     = "1m"
   }
 
   provisioner "remote-exec" {
@@ -148,6 +155,7 @@ resource "aws_instance" "production_server" {
       "sudo apt install -y python2.7 python-pip",
       "pip install setuptools"
     ]
+    on_failure = fail
   }
 
   provisioner "remote-exec" {
@@ -157,9 +165,6 @@ resource "aws_instance" "production_server" {
       "sudo systemctl start docker",
       "sudo systemctl enable docker"
     ]
-  }
-
-  tags = {
-    Name = "${var.prefix} server"
+    on_failure = fail
   }
 }
