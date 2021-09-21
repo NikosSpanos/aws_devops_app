@@ -79,11 +79,11 @@ resource "aws_key_pair" "generated_key_prod" {
 # Create the AWS EC2 instance
 data "aws_ami" "ubuntu-server" {
   most_recent = true
-  owners      = ["self"]
+  owners      = ["099720109477"]
 
   filter {
     name   = "name"
-    values = ["ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*"]
+    values = ["ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-20210430"]
   }
 
   filter {
@@ -94,6 +94,16 @@ data "aws_ami" "ubuntu-server" {
   filter {
     name   = "root-device-type"
     values = ["ebs"]
+  }
+
+  filter {
+    name = "hypervisor"
+    values = ["xen"]
+  }
+
+    filter {
+    name = "image-type"
+    values = ["machine"]
   }
 }
 
