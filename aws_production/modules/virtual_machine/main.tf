@@ -117,15 +117,16 @@ resource "aws_eip" "prod_server_public_ip" {
   instance          = aws_instance.production_server.id
   vpc               = true
   network_interface = aws_network_interface.nic_prod.id
-  depends_on        = [aws_internet_gateway.gw]
+  depends_on        = [aws_internet_gateway.gw, aws_instance.production_server]
 }
 
 resource "aws_instance" "production_server" {
-  //depends_on        = [aws_eip.prod_server_public_ip]
   ami               = data.aws_ami.ubuntu-server.id
   instance_type     = "t2.micro"
   key_name          = aws_key_pair.generated_key_prod.key_name
   subnet_id         = aws_subnet.subnet_prod.id
+  vpc_security_group_ids = ["${aws_security_group.sg_prod.id}"]
+  //vpc_security_group_ids = [aws_security_group.sg_prod.id]
 
   # network_interface {
   #   network_interface_id = aws_network_interface.nic_prod.id
