@@ -1,8 +1,8 @@
-output "tls_private_key_private" {
+output "tls_private_key" {
   value = tls_private_key.ssh_key_prod.private_key_pem 
 }
 
-output "tls_public_key_public" {
+output "tls_public_key" {
   value = tls_private_key.ssh_key_prod.public_key_pem
 }
 
