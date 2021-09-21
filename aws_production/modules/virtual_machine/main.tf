@@ -107,6 +107,12 @@ data "aws_ami" "ubuntu-server" {
   }
 }
 
+resource "aws_eip" "prod_server_public_ip" {
+  instance = aws_instance.production_server.id
+  vpc      = true
+  network_interface = aws_network_interface.nic_prod.id
+}
+
 resource "aws_instance" "production_server" {
   ami               = data.aws_ami.ubuntu-server.id
   instance_type     = "t2.micro"
@@ -119,7 +125,7 @@ resource "aws_instance" "production_server" {
 
   connection {
       type        = "ssh"
-      host        = self.public_ip
+      host        = aws_eip.prod_server_public_ip.public_ip //Error: host for provisioner cannot be empty -> https://github.com/hashicorp/terraform-provider-aws/issues/10977
       user        = "ubuntu"
       private_key = "${chomp(tls_private_key.ssh_key_prod.private_key_pem)}" //tls_private_key.ssh_key_prod.private_key_pem
       timeout     = "1m"
