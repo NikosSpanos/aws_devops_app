@@ -12,8 +12,12 @@ resource "aws_vpc" "vpc_prod" {
   cidr_block = "10.0.0.0/16"
 }
 
-# Create subnet
+# Assign gateway to vp
+resource "aws_internet_gateway" "gw" {
+  vpc_id = aws_vpc.vpc_prod.id
+}
 
+# Create subnet
 data "aws_availability_zones" "available" {
   state = "available"
 }
@@ -22,6 +26,8 @@ resource "aws_subnet" "subnet_prod" {
   vpc_id            = aws_vpc.vpc_prod.id
   cidr_block        = "10.0.1.0/24"
   availability_zone = data.aws_availability_zones.available.names[0]
+
+  depends_on = [aws_internet_gateway.gw]
 }
 
 # Create security group
@@ -108,15 +114,17 @@ data "aws_ami" "ubuntu-server" {
 }
 
 resource "aws_eip" "prod_server_public_ip" {
-  instance = aws_instance.production_server.id
-  vpc      = true
+  instance          = aws_instance.production_server.id
+  vpc               = true
   network_interface = aws_network_interface.nic_prod.id
+  depends_on        = [aws_internet_gateway.gw]
 }
 
 resource "aws_instance" "production_server" {
   ami               = data.aws_ami.ubuntu-server.id
   instance_type     = "t2.micro"
   key_name          = aws_key_pair.generated_key_prod.key_name
+  subnet_id         = aws_subnet.subnet_prod.id
 
   network_interface {
     network_interface_id = aws_network_interface.nic_prod.id
