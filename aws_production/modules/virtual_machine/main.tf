@@ -13,10 +13,15 @@ resource "aws_vpc" "vpc_prod" {
 }
 
 # Create subnet
+
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
 resource "aws_subnet" "subnet_prod" {
   vpc_id            = aws_vpc.vpc_prod.id
   cidr_block        = "10.0.1.0/24"
-  availability_zone = var.location_sg
+  availability_zone = data.aws_availability_zones.available.names[0]
 }
 
 # Create security group
@@ -72,11 +77,31 @@ resource "aws_key_pair" "generated_key_prod" {
 }
 
 # Create the AWS EC2 instance
+data "aws_ami" "ubuntu-server" {
+  most_recent = true
+  owners      = ["self"]
+
+  filter {
+    name   = "name"
+    values = ["ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+
+  filter {
+    name   = "root-device-type"
+    values = ["ebs"]
+  }
+}
+
 resource "aws_instance" "production_server" {
-  ami               = "ami-00399ec92321828f5" # us-east-2
+  ami               = data.aws_ami.ubuntu-server.id
   instance_type     = "t2.micro"
   key_name          = aws_key_pair.generated_key_prod.key_name
-  
+
   network_interface {
     network_interface_id = aws_network_interface.nic_prod.id
     device_index         = 0

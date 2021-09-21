@@ -36,7 +36,7 @@ resource "aws_db_subnet_group" "default" {
   subnet_ids = [var.ec2_instance_subnet]
 
   tags = {
-    Name = "My DB subnet group"
+    Name = "DB subnet group"
   }
 }
 
