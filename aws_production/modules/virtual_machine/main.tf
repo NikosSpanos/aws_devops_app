@@ -38,7 +38,7 @@ resource "aws_network_acl_rule" "ssh_acl_rule_prod" {
   to_port        = 22
 }
 
-resource "aws_network_acl_rule" "8080_acl_rule_prod" {
+resource "aws_network_acl_rule" "port_acl_rule_prod" {
   network_acl_id = aws_network_acl.production_acl_network.id
   rule_number    = 300
   protocol       = "tcp"
@@ -98,7 +98,7 @@ resource "aws_security_group_rule" "ssh_rule_prod" {
 }
 
 # Create second security rule to open port 8080 for jenkins and the application app
-resource "aws_security_group_rule" "8080_rule_prod" {
+resource "aws_security_group_rule" "port_rule_prod" {
   type              = "ingress"
   from_port         = 8080
   to_port           = 8080
