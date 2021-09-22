@@ -247,7 +247,6 @@ resource "aws_eip" "prod_server_public_ip" {
 
 resource "aws_route_table" "route_table_prod" {
   vpc_id = aws_vpc.vpc_prod.id
-  main = true
 
   tags = {
     Name = "route table for production server"
