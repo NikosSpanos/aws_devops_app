@@ -70,6 +70,10 @@ resource "aws_subnet" "subnet_prod" {
   availability_zone = data.aws_availability_zones.available.names[0]
   
   depends_on        = [aws_internet_gateway.gw]
+
+  tags = {
+      Name = "main-public-1"
+  }
 }
 
 resource "aws_subnet" "subnet_prod_id2" {
@@ -78,6 +82,10 @@ resource "aws_subnet" "subnet_prod_id2" {
   availability_zone = data.aws_availability_zones.available.names[1]
 
   depends_on        = [aws_internet_gateway.gw]
+
+  tags = {
+        Name = "main-public-2"
+    }
 }
 
 # Create security group
@@ -92,8 +100,8 @@ resource "aws_security_group_rule" "ssh_rule_prod" {
   from_port         = 22
   to_port           = 22
   protocol          = "tcp"
-  cidr_blocks       = [aws_vpc.vpc_prod.cidr_block]
-  security_group_id = aws_security_group.sg_prod.id
+  cidr_blocks       = [aws_vpc.vpc_prod.cidr_block] #aws_vpc.vpc_prod.cidr_block, "0.0.0.0/0"
+  #security_group_id = aws_security_group.sg_prod.id
   description = "security rule to open port 22 for ssh connection"
 }
 
@@ -103,8 +111,8 @@ resource "aws_security_group_rule" "port_rule_prod" {
   from_port         = 8080
   to_port           = 8080
   protocol          = "tcp"
-  cidr_blocks       = [aws_vpc.vpc_prod.cidr_block]
-  security_group_id = aws_security_group.sg_prod.id
+  cidr_blocks       = [aws_vpc.vpc_prod.cidr_block] #aws_vpc.vpc_prod.cidr_block, "0.0.0.0/0"
+  #security_group_id = aws_security_group.sg_prod.id
   description = "security rule to open port 8080 for jenkins and java application connection"
 }
 
@@ -113,8 +121,8 @@ resource "aws_security_group_rule" "http_rule_prod" {
   from_port         = 80
   to_port           = 80
   protocol          = "tcp"
-  cidr_blocks       = [aws_vpc.vpc_prod.cidr_block]
-  security_group_id = aws_security_group.sg_prod.id
+  cidr_blocks       = [aws_vpc.vpc_prod.cidr_block] #aws_vpc.vpc_prod.cidr_block, "0.0.0.0/0"
+  #security_group_id = aws_security_group.sg_prod.id
   description = "security rule to open port 8080 for jenkins and java application connection"
 }
 
@@ -199,18 +207,40 @@ resource "aws_instance" "production_server" {
 
   //user_data = file("install_modules_1.sh")
   //user_data = data.template_file.user_data.rendered
-  user_data= <<EOF
-		#! /bin/bash
-    echo "Installing modules..."
-    sudo apt-get update
-    sudo apt-get install -y openjdk-8-jdk
-    sudo apt install -y python2.7 python-pip
-    sudo apt install -y docker.io
-    sudo systemctl start docker
-    sudo systemctl enable docker
-    pip install setuptools
-    echo "Modules installed via Terraform"
-	EOF
+
+  connection {
+    type        = "ssh"
+    user        = "ubuntu"
+    private_key = "${chomp(tls_private_key.ssh_key_prod.private_key_pem)}"
+    host        = aws_eip.prod_server_public_ip.public_ip
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "echo 'Installing modules...'",
+      "sudo apt-get update",
+      "sudo apt-get install -y openjdk-8-jdk",
+      "sudo apt install -y python2.7 python-pip",
+      "sudo apt install -y docker.io",
+      "sudo systemctl start docker",
+      "sudo systemctl enable docker",
+      "pip install setuptools",
+      "echo 'Modules installed via Terraform'"
+    ]
+  }
+
+  # user_data= <<EOF
+	# 	#! /bin/bash
+  #   echo "Installing modules..."
+  #   sudo apt-get update
+  #   sudo apt-get install -y openjdk-8-jdk
+  #   sudo apt install -y python2.7 python-pip
+  #   sudo apt install -y docker.io
+  #   sudo systemctl start docker
+  #   sudo systemctl enable docker
+  #   pip install setuptools
+  #   echo "Modules installed via Terraform"
+	# EOF
 
   tags = {
     Name = "${var.prefix} server"
@@ -239,15 +269,7 @@ https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Internet_Gateway.html#Add_I
 https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-connect-set-up.html?icmpid=docs_ec2_console#ec2-instance-connect-setup-security-group
 */
 
-resource "aws_route" "route_prod" {
-  route_table_id              = aws_route_table.route_table_prod.id
-  destination_cidr_block      = "10.0.1.0/24"
-  network_interface_id        = aws_network_interface.nic_prod.id
-  depends_on = [
-    aws_route_table.route_table_prod
-  ]
-}
-
+#Important block!!!
 resource "aws_route" "route_prod_all" {
   route_table_id         = aws_route_table.route_table_prod.id
   destination_cidr_block = "0.0.0.0/0"
@@ -257,10 +279,16 @@ resource "aws_route" "route_prod_all" {
   ]
 }
 
-resource "aws_route_table_association" "table_association_prod" {
+resource "aws_route_table_association" "main-public-1-a" {
   subnet_id      = aws_subnet.subnet_prod.id
   route_table_id = aws_route_table.route_table_prod.id
 }
+
+resource "aws_route_table_association" "main-public-1-b" {
+  subnet_id      = aws_subnet.subnet_prod_id2.id
+  route_table_id = aws_route_table.route_table_prod.id
+}
+
 
 
 # resource "null_resource" "install_modules" {
