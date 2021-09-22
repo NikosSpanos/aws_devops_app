@@ -48,21 +48,6 @@ resource "aws_network_acl_rule" "http_acl_rule_prod" {
   to_port        = 8080
 }
 
-resource "aws_route_table" "route_table_prod" {
-  vpc_id = aws_vpc.vpc_prod.id
-
-  route = [
-    {
-      cidr_block = "10.0.1.0/24" //aws_vpc.vpc_prod.cidr_block => does this should be equal to cidr_block of subnet resouce?
-      gateway_id = aws_internet_gateway.gw.id
-    }
-  ]
-
-  tags = {
-    Name = "route table for production server"
-  }
-}
-
 # Create subnet
 data "aws_availability_zones" "available" {
   state = "available"
@@ -82,11 +67,6 @@ resource "aws_subnet" "subnet_prod_id2" {
   availability_zone = data.aws_availability_zones.available.names[1]
 
   depends_on        = [aws_internet_gateway.gw]
-}
-
-resource "aws_route_table_association" "table_association_prod" {
-  subnet_id      = aws_subnet.subnet_prod.id
-  route_table_id = aws_route_table.route_table_prod.id
 }
 
 # Create security group
@@ -215,6 +195,27 @@ resource "aws_instance" "production_server" {
     Name = "${var.prefix} server"
   }
 }
+
+resource "aws_route_table" "route_table_prod" {
+  vpc_id = aws_vpc.vpc_prod.id
+
+  route = [
+    {
+      instance_id = aws_instance.production_server.id
+      network_interface_id = aws_network_interface.nic_prod.id
+    }
+  ]
+
+  tags = {
+    Name = "route table for production server"
+  }
+}
+
+resource "aws_route_table_association" "table_association_prod" {
+  subnet_id      = aws_subnet.subnet_prod.id
+  route_table_id = aws_route_table.route_table_prod.id
+}
+
 
 # resource "null_resource" "install_modules" {
 #   depends_on    = [aws_eip.prod_server_public_ip, aws_instance.production_server]
