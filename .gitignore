@@ -1,3 +1,4 @@
 /aws_production/.terraform/
 /aws_production/.terraform.lock.hcl
 /aws_production/*.tfvars
+/aws_production/mykey
