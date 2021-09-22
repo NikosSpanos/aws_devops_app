@@ -186,6 +186,12 @@ data "aws_ami" "ubuntu-server" {
 #   template = file("/home/nspanos/Documents/DevOps_AWS/aws_devops_app/aws_production/modules/virtual_machine/install_modules_1.sh")
 # }
 
+resource "aws_eip_association" "eip_assoc" {
+  instance_id   = aws_instance.production_server.id
+  allocation_id = aws_eip.prod_server_public_ip.id
+  network_interface_id = aws_network_interface.nic_prod.id
+}
+
 resource "aws_instance" "production_server" {
   ami                         = data.aws_ami.ubuntu-server.id
   instance_type               = "t2.micro"
@@ -239,6 +245,7 @@ resource "aws_eip" "prod_server_public_ip" {
   instance          = aws_instance.production_server.id
   vpc               = true
   depends_on        = [aws_internet_gateway.gw, aws_instance.production_server]
+  //don't specify both instance and a network_interface id,One of the two!
 }
 
 resource "aws_route_table" "route_table_prod" {
