@@ -123,7 +123,17 @@ resource "aws_security_group_rule" "http_rule_prod" {
   protocol          = "tcp"
   cidr_blocks       = [aws_vpc.vpc_prod.cidr_block] #aws_vpc.vpc_prod.cidr_block, "0.0.0.0/0"
   security_group_id = aws_security_group.sg_prod.id
-  description = "security rule to open port 8080 for jenkins and java application connection"
+  description = "security rule to open http port 80"
+}
+
+resource "aws_security_group_rule" "http_outbound_rule_prod" {
+  type              = "egress"
+  from_port         = 80
+  to_port           = 80
+  protocol          = "tcp"
+  cidr_blocks       = ["0.0.0.0/0"] #aws_vpc.vpc_prod.cidr_block, "0.0.0.0/0"
+  security_group_id = aws_security_group.sg_prod.id
+  description = "security rule to open port 80 for outbound connection with http from remote server"
 }
 
 # Create network interface
