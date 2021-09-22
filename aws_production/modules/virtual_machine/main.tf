@@ -208,27 +208,6 @@ resource "aws_instance" "production_server" {
   //user_data = file("install_modules_1.sh")
   //user_data = data.template_file.user_data.rendered
 
-  connection {
-    type        = "ssh"
-    user        = "ubuntu"
-    private_key = "${chomp(tls_private_key.ssh_key_prod.private_key_pem)}"
-    host        = aws_eip.prod_server_public_ip.public_ip
-  }
-
-  provisioner "remote-exec" {
-    inline = [
-      "echo 'Installing modules...'",
-      "sudo apt-get update",
-      "sudo apt-get install -y openjdk-8-jdk",
-      "sudo apt install -y python2.7 python-pip",
-      "sudo apt install -y docker.io",
-      "sudo systemctl start docker",
-      "sudo systemctl enable docker",
-      "pip install setuptools",
-      "echo 'Modules installed via Terraform'"
-    ]
-  }
-
   # user_data= <<EOF
 	# 	#! /bin/bash
   #   echo "Installing modules..."
@@ -249,15 +228,6 @@ resource "aws_instance" "production_server" {
 
 resource "aws_route_table" "route_table_prod" {
   vpc_id = aws_vpc.vpc_prod.id
-
-  # route = [
-  #   {
-  #     cidr_block = "10.0.1.0/24"
-  #     gateway_id = aws_internet_gateway.gw.id
-  #     instance_id = aws_instance.production_server.id
-  #     network_interface_id = aws_network_interface.nic_prod.id
-  #   }
-  # ]
 
   tags = {
     Name = "route table for production server"
@@ -289,17 +259,30 @@ resource "aws_route_table_association" "main-public-1-b" {
   route_table_id = aws_route_table.route_table_prod.id
 }
 
+resource "null_resource" "install_modules" {
+  depends_on    = [aws_eip.prod_server_public_ip, aws_instance.production_server]
+  connection {
+    type        = "ssh"
+    host        = aws_instance.production_server.public_ip //Error: host for provisioner cannot be empty -> https://github.com/hashicorp/terraform-provider-aws/issues/10977
+    user        = "ubuntu"
+    private_key = "${chomp(tls_private_key.ssh_key_prod.private_key_pem)}" //tls_private_key.ssh_key_prod.private_key_pem
+    timeout     = "6m"
+  }
 
-
-# resource "null_resource" "install_modules" {
-#   depends_on    = [aws_eip.prod_server_public_ip, aws_instance.production_server]
-#   connection {
-#     type        = "ssh"
-#     host        = aws_instance.production_server.public_ip //Error: host for provisioner cannot be empty -> https://github.com/hashicorp/terraform-provider-aws/issues/10977
-#     user        = "ubuntu"
-#     private_key = "${chomp(tls_private_key.ssh_key_prod.private_key_pem)}" //tls_private_key.ssh_key_prod.private_key_pem
-#     timeout     = "6m"
-#   }
+  provisioner "remote-exec" {
+    inline = [
+      "echo 'Installing modules...'",
+      "sudo apt-get update",
+      "sudo apt-get install -y openjdk-8-jdk",
+      "sudo apt install -y python2.7 python-pip",
+      "sudo apt install -y docker.io",
+      "sudo systemctl start docker",
+      "sudo systemctl enable docker",
+      "pip install setuptools",
+      "echo 'Modules installed via Terraform'"
+    ]
+    on_failure = fail
+  }
 
 #   provisioner "remote-exec" {
 #     inline = [
@@ -320,4 +303,4 @@ resource "aws_route_table_association" "main-public-1-b" {
 #     ]
 #     on_failure = fail
 #   }
-#}
+}
