@@ -10,10 +10,11 @@ terraform {
 
 #Random id generator for unique server names
 resource "random_string" "string_server" {
-	length  = 8
+	length  = 5
     lower = true
     upper = false
     special = false
+    number = false
 }
 
 resource "aws_db_parameter_group" "db_param_group_prod" {

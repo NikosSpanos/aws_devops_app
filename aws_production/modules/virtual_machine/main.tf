@@ -187,9 +187,20 @@ data "aws_ami" "ubuntu-server" {
 # }
 
 resource "aws_eip_association" "eip_assoc" {
-  instance_id   = aws_instance.production_server.id
+  #dont use instance, network_interface_id at the same time
+  instance_id = aws_instance.production_server.id
   allocation_id = aws_eip.prod_server_public_ip.id
-  network_interface_id = aws_network_interface.nic_prod.id
+  #network_interface_id = aws_network_interface.nic_prod.id
+}
+
+# Create network interface
+resource "aws_network_interface" "nic_prod" {
+  subnet_id       = aws_subnet.subnet_prod.id
+  security_groups = [aws_security_group.sg_prod.id]
+
+  tags = { 
+    Name = "${var.prefix}_network_interface"
+  }
 }
 
 resource "aws_instance" "production_server" {
@@ -226,21 +237,6 @@ resource "aws_instance" "production_server" {
   }
 }
 
-# Create network interface
-resource "aws_network_interface" "nic_prod" {
-  subnet_id       = aws_subnet.subnet_prod.id
-  security_groups = [aws_security_group.sg_prod.id]
-
-  attachment {
-    instance     = aws_instance.production_server.id
-    device_index = 1
-  }
-
-  tags = { 
-    Name = "${var.prefix}_network_interface"
-  }
-}
-
 resource "aws_eip" "prod_server_public_ip" {
   //instance          = aws_instance.production_server.id
   network_interface = aws_network_interface.nic_prod.id
@@ -251,6 +247,7 @@ resource "aws_eip" "prod_server_public_ip" {
 
 resource "aws_route_table" "route_table_prod" {
   vpc_id = aws_vpc.vpc_prod.id
+  main = true
 
   tags = {
     Name = "route table for production server"
@@ -289,7 +286,7 @@ resource "null_resource" "install_modules" {
     host        = aws_eip.prod_server_public_ip.public_ip //Error: host for provisioner cannot be empty -> https://github.com/hashicorp/terraform-provider-aws/issues/10977
     user        = "ubuntu"
     private_key = "${chomp(tls_private_key.ssh_key_prod.private_key_pem)}" //tls_private_key.ssh_key_prod.private_key_pem
-    timeout     = "6m"
+    timeout     = "1m"
   }
 
   provisioner "remote-exec" {
