@@ -28,7 +28,7 @@ resource "aws_network_acl" "production_acl_network" {
   vpc_id = aws_vpc.vpc_prod.id
 }
 
-resource "aws_netowrk_acl_rule" "ssh_acl_rule_prod" {
+resource "aws_network_acl_rule" "ssh_acl_rule_prod" {
   network_acl_id = aws_network_acl.production_acl_network.id
   rule_number    = 200
   protocol       = "tcp"
@@ -38,7 +38,7 @@ resource "aws_netowrk_acl_rule" "ssh_acl_rule_prod" {
   to_port        = 22
 }
 
-resource "aws_netowrk_acl_rule" "http_acl_rule_prod" {
+resource "aws_network_acl_rule" "http_acl_rule_prod" {
   network_acl_id = aws_network_acl.production_acl_network.id
   rule_number    = 200
   protocol       = "tcp"
