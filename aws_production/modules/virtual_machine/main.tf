@@ -48,6 +48,21 @@ resource "aws_network_acl_rule" "http_acl_rule_prod" {
   to_port        = 8080
 }
 
+resource "aws_route_table" "route_table_prod" {
+  vpc_id = aws_vpc.vpc_prod.id
+
+  route = [
+    {
+      cidr_block = "10.0.1.0/24" //aws_vpc.vpc_prod.cidr_block => does this should be equal to cidr_block of subnet resouce?
+      gateway_id = aws_internet_gateway.gw.id
+    }
+  ]
+
+  tags = {
+    Name = "route table for production server"
+  }
+}
+
 # Create subnet
 data "aws_availability_zones" "available" {
   state = "available"
@@ -58,7 +73,7 @@ resource "aws_subnet" "subnet_prod" {
   cidr_block        = "10.0.1.0/24"
   availability_zone = data.aws_availability_zones.available.names[0]
   
-  depends_on = [aws_internet_gateway.gw]
+  depends_on        = [aws_internet_gateway.gw]
 }
 
 resource "aws_subnet" "subnet_prod_id2" {
@@ -66,12 +81,17 @@ resource "aws_subnet" "subnet_prod_id2" {
   cidr_block        = "10.0.2.0/24" //a second subnet can't use the same cidr block as the first subnet
   availability_zone = data.aws_availability_zones.available.names[1]
 
-  depends_on = [aws_internet_gateway.gw]
+  depends_on        = [aws_internet_gateway.gw]
+}
+
+resource "aws_route_table_association" "table_association_prod" {
+  subnet_id      = aws_subnet.subnet_prod.id
+  route_table_id = aws_route_table.route_table_prod.id
 }
 
 # Create security group
 resource "aws_security_group" "sg_prod" {
-    name = "${var.prefix}_network_security_group"
+    name   = "${var.prefix}_network_security_group"
     vpc_id = aws_vpc.vpc_prod.id
 }
 
