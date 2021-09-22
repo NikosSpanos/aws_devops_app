@@ -216,8 +216,7 @@ resource "aws_route_table" "route_table_prod" {
 resource "aws_route" "route_prod" {
   route_table_id         = aws_route_table.route_table_prod.id
   destination_cidr_block = "10.0.1.0/24"
-  instance_id = aws_instance.production_server.id
-  network_interface_id = aws_network_interface.nic_prod.id
+  instance_id            = aws_instance.production_server.id
   depends_on = [
     aws_route_table.route_table_prod
   ]
