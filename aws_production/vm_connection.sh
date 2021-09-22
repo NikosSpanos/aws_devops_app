@@ -17,16 +17,17 @@ fi
 file_key_v2=$(terraform output -json | jq -r '.output_private_key.value' > ./mykey)
 file_ip_v2=$(terraform output -json | jq -r '.output_public_ip.value')
 
-if command ssh -vvv -i ./mykey ubuntu@$file_ip_v2 ;
-then
-    echo 'Connect to remote server through known hosts'
-    ssh -vvv -i ./mykey ubuntu@$file_ip_v2
-else
-    echo 'Connecting through known hosts failed... \
-    Deleting host and reconnecting.'
-    ssh-keygen -f "$HOME/.ssh/known_hosts" -R "$file_ip_v2"
-    ssh -vvv -i ./mykey ubuntu@$file_ip_v2
-
 chmod 600 ./mykey
+
+# if command ssh -vvv -i ./mykey ubuntu@$file_ip_v2 ;
+# then
+#     echo 'Connect to remote server through known hosts'
+#     ssh -vvv -i ./mykey ubuntu@$file_ip_v2
+# else
+    # echo 'Connecting through known hosts failed... \
+    # Deleting host and reconnecting.'
+ssh-keygen -f "$HOME/.ssh/known_hosts" -R "$file_ip_v2"
+ssh -vvv -i ./mykey ubuntu@$file_ip_v2
+# fi
 
 rm -rf ./mykey

@@ -191,13 +191,6 @@ data "aws_ami" "ubuntu-server" {
   }
 }
 
-resource "aws_eip" "prod_server_public_ip" {
-  instance          = aws_instance.production_server.id
-  vpc               = true
-  network_interface = aws_network_interface.nic_prod.id
-  depends_on        = [aws_internet_gateway.gw, aws_instance.production_server]
-}
-
 # data "template_file" "user_data" {
 #   template = file("/home/nspanos/Documents/DevOps_AWS/aws_devops_app/aws_production/modules/virtual_machine/install_modules_1.sh")
 # }
@@ -234,6 +227,13 @@ resource "aws_instance" "production_server" {
   tags = {
     Name = "${var.prefix} server"
   }
+}
+
+resource "aws_eip" "prod_server_public_ip" {
+  instance          = aws_instance.production_server.id
+  vpc               = true
+  network_interface = aws_network_interface.nic_prod.id
+  depends_on        = [aws_internet_gateway.gw, aws_instance.production_server]
 }
 
 resource "aws_route_table" "route_table_prod" {
