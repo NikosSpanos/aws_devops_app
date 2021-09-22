@@ -30,7 +30,7 @@ resource "aws_network_acl" "production_acl_network" {
 
 resource "aws_network_acl_rule" "ssh_acl_rule_prod" {
   network_acl_id = aws_network_acl.production_acl_network.id
-  rule_number    = 200
+  rule_number    = 100
   protocol       = "tcp"
   rule_action    = "allow"
   cidr_block     = aws_vpc.vpc_prod.cidr_block
