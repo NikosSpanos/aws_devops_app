@@ -19,6 +19,35 @@ resource "aws_internet_gateway" "gw" {
   vpc_id = aws_vpc.vpc_prod.id
 }
 
+# resource "aws_nat_gateway" "nat_gw" {
+#   allocation_id = aws_eip.prod_server_public_ip.id
+#   subnet_id = aws_subnet.subnet_prod.id
+# }
+
+resource "aws_network_acl" "production_acl_network" {
+  vpc_id = aws_vpc.vpc_prod.id
+}
+
+resource "aws_netowrk_acl_rule" "ssh_acl_rule_prod" {
+  network_acl_id = aws_network_acl.production_acl_network.id
+  rule_number    = 200
+  protocol       = "tcp"
+  rule_action    = "allow"
+  cidr_block     = aws_vpc.vpc_prod.cidr_block
+  from_port      = 22
+  to_port        = 22
+}
+
+resource "aws_netowrk_acl_rule" "http_acl_rule_prod" {
+  network_acl_id = aws_network_acl.production_acl_network.id
+  rule_number    = 200
+  protocol       = "tcp"
+  rule_action    = "allow"
+  cidr_block     = aws_vpc.vpc_prod.cidr_block
+  from_port      = 8080
+  to_port        = 8080
+}
+
 # Create subnet
 data "aws_availability_zones" "available" {
   state = "available"
@@ -28,7 +57,7 @@ resource "aws_subnet" "subnet_prod" {
   vpc_id            = aws_vpc.vpc_prod.id
   cidr_block        = "10.0.1.0/24"
   availability_zone = data.aws_availability_zones.available.names[0]
-
+  
   depends_on = [aws_internet_gateway.gw]
 }
 
