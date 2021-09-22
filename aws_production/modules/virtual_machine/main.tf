@@ -101,7 +101,7 @@ resource "aws_security_group_rule" "ssh_rule_prod" {
   to_port           = 22
   protocol          = "tcp"
   cidr_blocks       = [aws_vpc.vpc_prod.cidr_block] #aws_vpc.vpc_prod.cidr_block, "0.0.0.0/0"
-  #security_group_id = aws_security_group.sg_prod.id
+  security_group_id = aws_security_group.sg_prod.id
   description = "security rule to open port 22 for ssh connection"
 }
 
@@ -112,7 +112,7 @@ resource "aws_security_group_rule" "port_rule_prod" {
   to_port           = 8080
   protocol          = "tcp"
   cidr_blocks       = [aws_vpc.vpc_prod.cidr_block] #aws_vpc.vpc_prod.cidr_block, "0.0.0.0/0"
-  #security_group_id = aws_security_group.sg_prod.id
+  security_group_id = aws_security_group.sg_prod.id
   description = "security rule to open port 8080 for jenkins and java application connection"
 }
 
@@ -122,7 +122,7 @@ resource "aws_security_group_rule" "http_rule_prod" {
   to_port           = 80
   protocol          = "tcp"
   cidr_blocks       = [aws_vpc.vpc_prod.cidr_block] #aws_vpc.vpc_prod.cidr_block, "0.0.0.0/0"
-  #security_group_id = aws_security_group.sg_prod.id
+  security_group_id = aws_security_group.sg_prod.id
   description = "security rule to open port 8080 for jenkins and java application connection"
 }
 
