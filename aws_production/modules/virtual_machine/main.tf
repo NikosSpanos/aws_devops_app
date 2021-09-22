@@ -240,9 +240,9 @@ https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-connect-set-up.
 */
 
 resource "aws_route" "route_prod" {
-  route_table_id         = aws_route_table.route_table_prod.id
-  destination_cidr_block = "10.0.1.0/24"
-  gateway_id             = aws_internet_gateway.gw.id
+  route_table_id              = aws_route_table.route_table_prod.id
+  destination_cidr_block      = "10.0.1.0/24"
+  network_interface_id        = aws_network_interface.nic_prod.id
   depends_on = [
     aws_route_table.route_table_prod
   ]
