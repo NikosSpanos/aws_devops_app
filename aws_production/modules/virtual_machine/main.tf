@@ -238,7 +238,6 @@ resource "aws_network_interface" "nic_prod" {
 resource "aws_eip" "prod_server_public_ip" {
   instance          = aws_instance.production_server.id
   vpc               = true
-  network_interface = aws_network_interface.nic_prod.id
   depends_on        = [aws_internet_gateway.gw, aws_instance.production_server]
 }
 
