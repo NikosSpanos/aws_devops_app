@@ -136,15 +136,6 @@ resource "aws_security_group_rule" "http_outbound_rule_prod" {
   description = "security rule to open port 80 for outbound connection with http from remote server"
 }
 
-# Create network interface
-resource "aws_network_interface" "nic_prod" {
-  subnet_id = aws_subnet.subnet_prod.id
-
-  tags = {
-    Name = "${var.prefix}_network_interface"
-  }
-}
-
 # SSH key generated for accessing VM
 resource "tls_private_key" "ssh_key_prod" {
   algorithm = "RSA"
@@ -226,6 +217,21 @@ resource "aws_instance" "production_server" {
 
   tags = {
     Name = "${var.prefix} server"
+  }
+}
+
+# Create network interface
+resource "aws_network_interface" "nic_prod" {
+  subnet_id       = aws_subnet.subnet_prod.id
+  security_groups = [aws_security_group.sg_prod.id]
+
+  attachment {
+    instance     = aws_instance.production_server.id
+    device_index = 1
+  }
+
+  tags = { 
+    Name = "${var.prefix}_network_interface"
   }
 }
 
