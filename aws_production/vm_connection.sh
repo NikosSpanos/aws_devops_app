@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if [ -f ./mykey ]; 
+if [ -f ./mykey ];
 then
     rm -rf ./mykey
 fi
@@ -15,10 +15,9 @@ else
 fi
 
 file_key_v2=$(terraform output -json | jq -r '.output_private_key.value' > ./mykey)
-file_ip_v2=$(terraform output -json | jq -r '.output_public_dns_address.value')
+file_ip_v2=$(terraform output -json | jq -r '.output_public_ip.value')
 
 chmod 600 ./mykey
 
-ssh -i -vvv ./mykey ubuntu@$file_ip_v2
-
+ssh -vvv -i ./mykey ubuntu@$file_ip_v2
 rm -rf ./mykey

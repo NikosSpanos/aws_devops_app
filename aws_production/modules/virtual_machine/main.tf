@@ -30,7 +30,7 @@ resource "aws_network_acl" "production_acl_network" {
 
 resource "aws_network_acl_rule" "ssh_acl_rule_prod" {
   network_acl_id = aws_network_acl.production_acl_network.id
-  rule_number    = 100
+  rule_number    = 200
   protocol       = "tcp"
   rule_action    = "allow"
   cidr_block     = aws_vpc.vpc_prod.cidr_block
@@ -38,15 +38,26 @@ resource "aws_network_acl_rule" "ssh_acl_rule_prod" {
   to_port        = 22
 }
 
-resource "aws_network_acl_rule" "http_acl_rule_prod" {
+resource "aws_network_acl_rule" "8080_acl_rule_prod" {
   network_acl_id = aws_network_acl.production_acl_network.id
-  rule_number    = 200
+  rule_number    = 300
   protocol       = "tcp"
   rule_action    = "allow"
   cidr_block     = aws_vpc.vpc_prod.cidr_block
   from_port      = 8080
   to_port        = 8080
 }
+
+resource "aws_network_acl_rule" "http_acl_rule_prod" {
+  network_acl_id = aws_network_acl.production_acl_network.id
+  rule_number    = 100
+  protocol       = "tcp"
+  rule_action    = "allow"
+  cidr_block     = aws_vpc.vpc_prod.cidr_block
+  from_port      = 80
+  to_port        = 80
+}
+
 
 # Create subnet
 data "aws_availability_zones" "available" {
@@ -87,10 +98,20 @@ resource "aws_security_group_rule" "ssh_rule_prod" {
 }
 
 # Create second security rule to open port 8080 for jenkins and the application app
-resource "aws_security_group_rule" "http_rule_prod" {
+resource "aws_security_group_rule" "8080_rule_prod" {
   type              = "ingress"
   from_port         = 8080
   to_port           = 8080
+  protocol          = "tcp"
+  cidr_blocks       = [aws_vpc.vpc_prod.cidr_block]
+  security_group_id = aws_security_group.sg_prod.id
+  description = "security rule to open port 8080 for jenkins and java application connection"
+}
+
+resource "aws_security_group_rule" "http_rule_prod" {
+  type              = "ingress"
+  from_port         = 80
+  to_port           = 80
   protocol          = "tcp"
   cidr_blocks       = [aws_vpc.vpc_prod.cidr_block]
   security_group_id = aws_security_group.sg_prod.id
@@ -176,7 +197,7 @@ resource "aws_instance" "production_server" {
   #   device_index         = 0
   # }
 
-  //user_data = file("./install_modules_1.sh")
+  //user_data = file("install_modules_1.sh")
   //user_data = data.template_file.user_data.rendered
   user_data= <<EOF
 		#! /bin/bash
@@ -213,15 +234,28 @@ resource "aws_route_table" "route_table_prod" {
   }
 }
 
+/*documentation =>
+https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Internet_Gateway.html#Add_IGW_Routing
+https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-connect-set-up.html?icmpid=docs_ec2_console#ec2-instance-connect-setup-security-group
+*/
+
 resource "aws_route" "route_prod" {
   route_table_id         = aws_route_table.route_table_prod.id
   destination_cidr_block = "10.0.1.0/24"
-  instance_id            = aws_instance.production_server.id
+  gateway_id             = aws_internet_gateway.gw.id
   depends_on = [
     aws_route_table.route_table_prod
   ]
 }
 
+resource "aws_route" "route_prod_all" {
+  route_table_id         = aws_route_table.route_table_prod.id
+  destination_cidr_block = "0.0.0.0/0"
+  gateway_id             = aws_internet_gateway.gw.id
+  depends_on = [
+    aws_route_table.route_table_prod
+  ]
+}
 
 resource "aws_route_table_association" "table_association_prod" {
   subnet_id      = aws_subnet.subnet_prod.id
