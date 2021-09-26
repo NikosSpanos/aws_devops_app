@@ -240,7 +240,7 @@ resource "aws_security_group_rule" "http_outbound_rule_prod" {
 }
 
 # Create second (outbound) security rule to open port 443 for HTTPS requests
-resource "aws_security_group_rule" "http_outbound_rule_prod" {
+resource "aws_security_group_rule" "https_outbound_rule_prod" {
   type              = "egress"
   from_port         = 443
   to_port           = 443
