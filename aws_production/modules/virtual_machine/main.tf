@@ -97,7 +97,7 @@ resource "aws_network_acl_rule" "ssh_acl_rule_prod_in" {
   rule_number    = 120
   protocol       = "tcp"
   rule_action    = "allow"
-  cidr_blocks    = ["${chomp(data.http.myip.body)}/32"]
+  cidr_block     = ["${chomp(data.http.myip.body)}/32"]
   from_port      = 22
   to_port        = 22
 }
@@ -115,8 +115,9 @@ resource "aws_network_acl_rule" "http_more_public_ip_in" {
 resource "aws_network_acl_rule" "ping_acl_rule_prod_in" {
   network_acl_id = aws_network_acl.production_acl_network.id
   rule_number    = 140
+  protocol       = "icmp"
   rule_action    = "allow"
-  cidr_block     = ["${chomp(data.http.myip.body)}/32"]
+  cidr_block     = "${chomp(data.http.myip.body)}/32"
   icmp_type      = 42
   icmp_code      = 0
 }
@@ -157,9 +158,9 @@ resource "aws_network_acl_rule" "ping_public_ip_out" {
 
 resource "aws_network_acl_rule" "port_acl_rule_prod_out" {
   network_acl_id = aws_network_acl.production_acl_network.id
-  egress         = true 
+  egress         = true
+  protocol       = -1
   rule_number    = 150
-  rule_action    = -1
   cidr_block     = "0.0.0.0/0"
   from_port      = 0
   to_port        = 0
@@ -167,7 +168,7 @@ resource "aws_network_acl_rule" "port_acl_rule_prod_out" {
 
 # ---------------------------------------- Step 3: Create security group/ rules ----------------------------------------
 resource "aws_security_group" "sg_prod" {
-    name   = "${var.prefix}_network_security_group"
+    name   = "production-security-group"
     vpc_id = aws_vpc.vpc_prod.id
 }
 
@@ -271,7 +272,7 @@ resource "aws_key_pair" "generated_key_prod" {
 # Create network interface
 resource "aws_network_interface" "network_interface_prod" {
   subnet_id       = aws_subnet.subnet_prod.id
-  security_groups = [aws_security_group.sg_prod.id, aws_security_group.sg_prod_id2.id]
+  security_groups = [aws_security_group.sg_prod.id]
   description     = "Production server network interface"
 
   tags   = {
