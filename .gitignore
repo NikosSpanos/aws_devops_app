@@ -2,3 +2,4 @@
 /aws_production/.terraform.lock.hcl
 /aws_production/*.tfvars
 /aws_production/mykey
+/aws_production/*.txt

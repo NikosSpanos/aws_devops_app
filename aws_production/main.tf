@@ -7,10 +7,10 @@ terraform {
     }
   }
   backend "remote" {
-    organization = "codehub-spanos"
+    organization = "codehub-spanos" #terraform cloud main user
 
     workspaces {
-      name = "aws_app_prod" //terraform cloud workspace
+      name = "aws_app_prod" #terraform cloud workspace
     }
   }
 }
@@ -21,22 +21,18 @@ provider "aws"{
       region = var.location //configure aws cli => https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2-linux.html
       access_key = var.aws_access_key
       secret_key = var.aws_secret_key
-      //shared_credentials_file = var.credentials_path
-      //profile = "default"
+      #shared_credentials_file = var.credentials_path
+      #profile = "default"
   }
 
 module "virtual_machines" {
     source = "./modules/virtual_machine"
-    location = var.location
-    //location_sg = var.location_sg
     prefix = var.prefix
 }
 
 module "mysql" {
     source = "./modules/mysql"
     vm_instance_sg = module.virtual_machines.security_group_id
-    location = var.location
-    //location_sg = var.location_sg
     prefix = var.prefix
     mysql_master_username = var.mysql_master_username
     mysql_master_password = var.mysql_master_password

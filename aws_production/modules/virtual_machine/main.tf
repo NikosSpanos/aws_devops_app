@@ -9,57 +9,25 @@ terraform {
 
 # Create virtual private cloud (vpc)
 resource "aws_vpc" "vpc_prod" {
-  cidr_block = "10.0.0.0/16"
+  cidr_block = "10.0.0.0/16" #or 10.0.0.0/16
   enable_dns_hostnames = true
   enable_dns_support = true
+
+    tags = {
+      Name = "production-private-cloud"
+  }
 }
 
 # Assign gateway to vp
 resource "aws_internet_gateway" "gw" {
   vpc_id = aws_vpc.vpc_prod.id
+  
+  tags = {
+      Name = "production-igw"
+  }
 }
 
-# resource "aws_nat_gateway" "nat_gw" {
-#   allocation_id = aws_eip.prod_server_public_ip.id
-#   subnet_id = aws_subnet.subnet_prod.id
-# }
-
-resource "aws_network_acl" "production_acl_network" {
-  vpc_id = aws_vpc.vpc_prod.id
-}
-
-resource "aws_network_acl_rule" "ssh_acl_rule_prod" {
-  network_acl_id = aws_network_acl.production_acl_network.id
-  rule_number    = 200
-  protocol       = "tcp"
-  rule_action    = "allow"
-  cidr_block     = aws_vpc.vpc_prod.cidr_block
-  from_port      = 22
-  to_port        = 22
-}
-
-resource "aws_network_acl_rule" "port_acl_rule_prod" {
-  network_acl_id = aws_network_acl.production_acl_network.id
-  rule_number    = 300
-  protocol       = "tcp"
-  rule_action    = "allow"
-  cidr_block     = aws_vpc.vpc_prod.cidr_block
-  from_port      = 8080
-  to_port        = 8080
-}
-
-resource "aws_network_acl_rule" "http_acl_rule_prod" {
-  network_acl_id = aws_network_acl.production_acl_network.id
-  rule_number    = 100
-  protocol       = "tcp"
-  rule_action    = "allow"
-  cidr_block     = aws_vpc.vpc_prod.cidr_block
-  from_port      = 80
-  to_port        = 80
-}
-
-
-# Create subnet
+# ---------------------------------------- Step 1: Create two subnets ----------------------------------------
 data "aws_availability_zones" "available" {
   state = "available"
 }
@@ -68,8 +36,9 @@ resource "aws_subnet" "subnet_prod" {
   vpc_id            = aws_vpc.vpc_prod.id
   cidr_block        = "10.0.1.0/24"
   availability_zone = data.aws_availability_zones.available.names[0]
-  
   depends_on        = [aws_internet_gateway.gw]
+
+  map_public_ip_on_launch = true
 
   tags = {
       Name = "main-public-1"
@@ -80,7 +49,6 @@ resource "aws_subnet" "subnet_prod_id2" {
   vpc_id            = aws_vpc.vpc_prod.id
   cidr_block        = "10.0.2.0/24" //a second subnet can't use the same cidr block as the first subnet
   availability_zone = data.aws_availability_zones.available.names[1]
-
   depends_on        = [aws_internet_gateway.gw]
 
   tags = {
@@ -88,44 +56,179 @@ resource "aws_subnet" "subnet_prod_id2" {
     }
 }
 
-# Create security group
+# ---------------------------------------- Step 2: Create ACL network/ rules ----------------------------------------
+resource "aws_network_acl" "production_acl_network" {
+  vpc_id = aws_vpc.vpc_prod.id
+  subnet_ids = [aws_subnet.subnet_prod.id, aws_subnet.subnet_prod_id2.id] #assign the created subnets to the acl network otherwirse the NACL is assigned to a default subnet
+
+  tags = {
+    Name = "production-network-acl"
+  }
+}
+
+# Create acl rules for the network
+
+data "http" "myip" {
+  url = "http://ipv4.icanhazip.com"
+}
+
+resource "aws_network_acl_rule" "http_acl_rule_prod" {
+  network_acl_id = aws_network_acl.production_acl_network.id
+  rule_number    = 100
+  protocol       = "tcp"
+  rule_action    = "allow"
+  cidr_block     = "0.0.0.0/0"
+  from_port      = 80
+  to_port        = 80
+}
+
+resource "aws_network_acl_rule" "https_acl_rule_prod" {
+  network_acl_id = aws_network_acl.production_acl_network.id
+  rule_number    = 110
+  protocol       = "tcp"
+  rule_action    = "allow"
+  cidr_block     = "0.0.0.0/0"
+  from_port      = 443
+  to_port        = 443
+}
+
+resource "aws_network_acl_rule" "ssh_acl_rule_prod" {
+  network_acl_id = aws_network_acl.production_acl_network.id
+  rule_number    = 120
+  protocol       = "tcp"
+  rule_action    = "allow"
+  cidr_blocks    = ["${chomp(data.http.myip.body)}/32"]
+  from_port      = 22
+  to_port        = 22
+}
+
+resource "aws_network_acl_rule" "http_more_public_ip" {
+  network_acl_id = aws_network_acl.production_acl_network.id
+  rule_number    = 130
+  protocol       = "tcp"
+  rule_action    = "allow"
+  cidr_block     = "0.0.0.0/0"
+  from_port      = 8080
+  to_port        = 8080
+}
+
+resource "aws_network_acl_rule" "ping_acl_rule_prod" {
+  network_acl_id = aws_network_acl.production_acl_network.id
+  rule_number    = 140
+  rule_action    = "allow"
+  cidr_block     = ["${chomp(data.http.myip.body)}/32"]
+  icmp_type      = 42
+  icmp_code      = 0
+}
+
+# ACL outbound
+resource "aws_network_acl_rule" "http_acl_rule_prod" {
+  network_acl_id = aws_network_acl.production_acl_network.id
+  egress         = true
+  rule_number    = 100
+  protocol       = "tcp"
+  rule_action    = "allow"
+  cidr_block     = "0.0.0.0/0"
+  from_port      = 80
+  to_port        = 80
+}
+
+resource "aws_network_acl_rule" "https_acl_rule_prod" {
+  network_acl_id = aws_network_acl.production_acl_network.id
+  egress         = true
+  rule_number    = 110
+  protocol       = "tcp"
+  rule_action    = "allow"
+  cidr_block     = "0.0.0.0/0"
+  from_port      = 443
+  to_port        = 443
+}
+
+resource "aws_network_acl_rule" "ping_public_ip" {
+  network_acl_id = aws_network_acl.production_acl_network.id
+  egress         = true
+  rule_number   = 130
+  protocol       = "tcp"
+  rule_action    = "allow"
+  cidr_block     = "0.0.0.0/0"
+  from_port      = 8080
+  to_port        = 8080
+}
+
+resource "aws_network_acl_rule" "port_acl_rule_prod" {
+  network_acl_id = aws_network_acl.production_acl_network.id
+  egress         = true 
+  rule_number    = 150
+  rule_action    = -1
+  cidr_block     = "0.0.0.0/0"
+  from_port      = 0
+  to_port        = 0
+}
+
+# ---------------------------------------- Step 3: Create security group/ rules ----------------------------------------
 resource "aws_security_group" "sg_prod" {
     name   = "${var.prefix}_network_security_group"
     vpc_id = aws_vpc.vpc_prod.id
 }
 
-# Create first security rule to open port 22
+# Create first (inbound) security rule to open port 22 for ssh connection request
 resource "aws_security_group_rule" "ssh_rule_prod" {
   type              = "ingress"
   from_port         = 22
   to_port           = 22
   protocol          = "tcp"
-  cidr_blocks       = [aws_vpc.vpc_prod.cidr_block] #aws_vpc.vpc_prod.cidr_block, "0.0.0.0/0"
+  cidr_blocks       = ["${chomp(data.http.myip.body)}/32"] #aws_vpc.vpc_prod.cidr_block, "0.0.0.0/0"
   security_group_id = aws_security_group.sg_prod.id
-  description = "security rule to open port 22 for ssh connection"
+  description       = "security rule to open port 22 for ssh connection"
 }
 
-# Create second security rule to open port 8080 for jenkins and the application app
-resource "aws_security_group_rule" "port_rule_prod" {
+# Create second (inbound) security rule to open port 8080 for jenkins and the application app
+resource "aws_security_group_rule" "internet_rule_prod" {
   type              = "ingress"
   from_port         = 8080
   to_port           = 8080
   protocol          = "tcp"
-  cidr_blocks       = [aws_vpc.vpc_prod.cidr_block] #aws_vpc.vpc_prod.cidr_block, "0.0.0.0/0"
+  cidr_blocks       = ["0.0.0.0/0"] #aws_vpc.vpc_prod.cidr_block, "0.0.0.0/0"
   security_group_id = aws_security_group.sg_prod.id
-  description = "security rule to open port 8080 for jenkins and java application connection"
+  description       = "security rule to open port 8080 for jenkins and java application connection"
 }
 
+# Create third (inbound) security rule to open port 80 for HTTP requests
 resource "aws_security_group_rule" "http_rule_prod" {
   type              = "ingress"
   from_port         = 80
   to_port           = 80
   protocol          = "tcp"
-  cidr_blocks       = [aws_vpc.vpc_prod.cidr_block] #aws_vpc.vpc_prod.cidr_block, "0.0.0.0/0"
+  cidr_blocks       = ["0.0.0.0/0"] #aws_vpc.vpc_prod.cidr_block, "0.0.0.0/0"
   security_group_id = aws_security_group.sg_prod.id
-  description = "security rule to open http port 80"
+  description       = "security rule to open http port 80"
 }
 
+# Create fourth (inbound) security rule to open port 443 for HTTPS requests
+resource "aws_security_group_rule" "http_rule_prod" {
+  type              = "ingress"
+  from_port         = 443
+  to_port           = 443
+  protocol          = "tcp"
+  cidr_blocks       = ["0.0.0.0/0"] #aws_vpc.vpc_prod.cidr_block, "0.0.0.0/0"
+  security_group_id = aws_security_group.sg_prod.id
+  description       = "security rule to open https port 443"
+}
+
+# Create fifth (inbound) security rule to allow pings of public ip address of ec2 instance from local machine
+resource "aws_security_group_rule" "http_rule_prod" {
+  type              = "ingress"
+  from_port         = 42
+  to_port           = 42
+  protocol          = "icmp"
+  cidr_blocks       = ["${chomp(data.http.myip.body)}/32"] #aws_vpc.vpc_prod.cidr_block, "0.0.0.0/0"
+  security_group_id = aws_security_group.sg_prod.id
+  description       = "allow pinging elastic public ipv4 address of ec2 instance from local machine"
+}
+
+#--------------------------------
+
+# Create first (outbound) security rule to open port 80 for HTTP requests (this will help to download packages while connected to vm)
 resource "aws_security_group_rule" "http_outbound_rule_prod" {
   type              = "egress"
   from_port         = 80
@@ -133,25 +236,85 @@ resource "aws_security_group_rule" "http_outbound_rule_prod" {
   protocol          = "tcp"
   cidr_blocks       = ["0.0.0.0/0"] #aws_vpc.vpc_prod.cidr_block, "0.0.0.0/0"
   security_group_id = aws_security_group.sg_prod.id
-  description = "security rule to open port 80 for outbound connection with http from remote server"
+  description       = "security rule to open port 80 for outbound connection with http from remote server"
 }
 
-# SSH key generated for accessing VM
+# Create second (outbound) security rule to open port 443 for HTTPS requests
+resource "aws_security_group_rule" "http_outbound_rule_prod" {
+  type              = "egress"
+  from_port         = 443
+  to_port           = 443
+  protocol          = "tcp"
+  cidr_blocks       = ["0.0.0.0/0"] #aws_vpc.vpc_prod.cidr_block, "0.0.0.0/0"
+  security_group_id = aws_security_group.sg_prod.id
+  description       = "security rule to open port 443 for outbound connection with https from remote server"
+}
+
+# ---------------------------------------- Step 4: SSH key generated for accessing VM ----------------------------------------
 resource "tls_private_key" "ssh_key_prod" {
   algorithm = "RSA"
-  rsa_bits = 4096
+  rsa_bits  = 4096
 }
 
+# ---------------------------------------- Step 5: Generate aws_key_pair ----------------------------------------
 resource "aws_key_pair" "generated_key_prod" {
   key_name   = "${var.prefix}_server_ssh_key"
   public_key = tls_private_key.ssh_key_prod.public_key_openssh
 
-  tags = {
+  tags   = {
     Name = "SSH key pair for production server"
   }
 }
 
-# Create the AWS EC2 instance
+# ---------------------------------------- Step 6: Create network interface ----------------------------------------
+
+# Create network interface
+resource "aws_network_interface" "network_interface_prod" {
+  subnet_id       = aws_subnet.subnet_prod.id
+  security_groups = [aws_security_group.sg_prod.id, aws_security_group.sg_prod_id2.id]
+  description     = "Production server network interface"
+
+  tags   = {
+    Name = "production-network-interface"
+  }
+}
+
+# ---------------------------------------- Step 7: Create route table with rules ----------------------------------------
+
+resource "aws_route_table" "route_table_prod" {
+  vpc_id = aws_vpc.vpc_prod.id
+  tags   = {
+    Name = "route-table-production-server"
+  }
+}
+
+/*documentation =>
+https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Internet_Gateway.html#Add_IGW_Routing
+https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-connect-set-up.html?icmpid=docs_ec2_console#ec2-instance-connect-setup-security-group
+*/
+
+#Important block!!! -- First rule of the table (allow all routes)
+resource "aws_route" "route_prod_all" {
+  route_table_id         = aws_route_table.route_table_prod.id
+  destination_cidr_block = "0.0.0.0/0"
+  gateway_id             = aws_internet_gateway.gw.id
+  depends_on             = [
+    aws_route_table.route_table_prod, aws_internet_gateway.gw
+  ]
+}
+
+# Create main route table association with the two subnets
+resource "aws_main_route_table_association" "main-public-1-a" {
+  vpc_id         = aws_vpc.vpc_prod.id
+  route_table_id = aws_route_table.route_table_prod.id
+}
+
+resource "aws_route_table_association" "main-public-1-b" {
+  subnet_id      = aws_subnet.subnet_prod_id2.id
+  route_table_id = aws_route_table.route_table_prod.id
+}
+
+# ---------------------------------------- Step 8: Create the AWS EC2 instance ----------------------------------------
 data "aws_ami" "ubuntu-server" {
   most_recent = true
   owners      = ["099720109477"]
@@ -182,39 +345,17 @@ data "aws_ami" "ubuntu-server" {
   }
 }
 
-# data "template_file" "user_data" {
-#   template = file("/home/nspanos/Documents/DevOps_AWS/aws_devops_app/aws_production/modules/virtual_machine/install_modules_1.sh")
-# }
-
-resource "aws_eip_association" "eip_assoc" {
-  #dont use instance, network_interface_id at the same time
-  instance_id = aws_instance.production_server.id
-  allocation_id = aws_eip.prod_server_public_ip.id
-  #network_interface_id = aws_network_interface.nic_prod.id
-}
-
-# Create network interface
-resource "aws_network_interface" "nic_prod" {
-  subnet_id       = aws_subnet.subnet_prod.id
-  security_groups = [aws_security_group.sg_prod.id]
-
-  tags = { 
-    Name = "${var.prefix}_network_interface"
-  }
-}
-
 resource "aws_instance" "production_server" {
   ami                         = data.aws_ami.ubuntu-server.id
   instance_type               = "t2.micro"
   key_name                    = aws_key_pair.generated_key_prod.key_name
   subnet_id                   = aws_subnet.subnet_prod.id
   vpc_security_group_ids      = [aws_security_group.sg_prod.id]
-  associate_public_ip_address = true
 
-  # network_interface {
-  #   network_interface_id = aws_network_interface.nic_prod.id
-  #   device_index         = 0
-  # }
+  network_interface {
+    network_interface_id = aws_network_interface.network_interface_prod.id
+    device_index         = 0
+  }
 
   //user_data = file("install_modules_1.sh")
   //user_data = data.template_file.user_data.rendered
@@ -232,51 +373,39 @@ resource "aws_instance" "production_server" {
   #   echo "Modules installed via Terraform"
 	# EOF
 
-  tags = {
-    Name = "${var.prefix} server"
+  tags   = {
+    Name = "production-server"
   }
 }
+
+# ---------------------------------------- Step 9: Create the Elastic Public IP ----------------------------------------
 
 resource "aws_eip" "prod_server_public_ip" {
-  //instance          = aws_instance.production_server.id
-  network_interface = aws_network_interface.nic_prod.id
   vpc               = true
+  instance          = aws_instance.production_server.id
+  #network_interface = aws_network_interface.network_interface_prod.id
+  #don't specify both instance and a network_interface id, one of the two!
+  
   depends_on        = [aws_internet_gateway.gw, aws_instance.production_server]
-  //don't specify both instance and a network_interface id,One of the two!
-}
-
-resource "aws_route_table" "route_table_prod" {
-  vpc_id = aws_vpc.vpc_prod.id
-
-  tags = {
-    Name = "route table for production server"
+  tags   = {
+    Name = "production-elastic-ip"
   }
 }
 
-/*documentation =>
-https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Internet_Gateway.html#Add_IGW_Routing
-https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-connect-set-up.html?icmpid=docs_ec2_console#ec2-instance-connect-setup-security-group
-*/
+# ---------------------------------------- Step 10: Associate public ip to instance or network interface ----------------------------------------
 
-#Important block!!!
-resource "aws_route" "route_prod_all" {
-  route_table_id         = aws_route_table.route_table_prod.id
-  destination_cidr_block = "0.0.0.0/0"
-  gateway_id             = aws_internet_gateway.gw.id
-  depends_on = [
-    aws_route_table.route_table_prod
-  ]
+resource "aws_eip_association" "eip_assoc" {
+  #dont use instance, network_interface_id at the same time
+  instance_id   = aws_instance.production_server.id
+  allocation_id = aws_eip.prod_server_public_ip.id
+  #network_interface_id = aws_network_interface.nic_prod.id
+  
+  tags   = {
+    Name = "production-network-interface-association"
+  }
 }
 
-resource "aws_route_table_association" "main-public-1-a" {
-  subnet_id      = aws_subnet.subnet_prod.id
-  route_table_id = aws_route_table.route_table_prod.id
-}
-
-resource "aws_route_table_association" "main-public-1-b" {
-  subnet_id      = aws_subnet.subnet_prod_id2.id
-  route_table_id = aws_route_table.route_table_prod.id
-}
+# ---------------------------------------- Step 11: Install modules in production server ----------------------------------------
 
 resource "null_resource" "install_modules" {
   depends_on    = [aws_eip.prod_server_public_ip, aws_instance.production_server]

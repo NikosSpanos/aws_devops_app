@@ -22,3 +22,7 @@ output "output_public_dns_address" {
   sensitive = true
   value = module.virtual_machines.server_dns_public_address
 }
+
+output "output_eip_public_ip" {
+  value = module.virtual_machines.eip_address
+}
