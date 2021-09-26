@@ -274,6 +274,7 @@ resource "aws_key_pair" "generated_key_prod" {
 resource "aws_network_interface" "network_interface_prod" {
   subnet_id       = aws_subnet.subnet_prod.id
   security_groups = [aws_security_group.sg_prod.id]
+  #private_ip      = aws_eip.prod_server_public_ip.private_ip #!!! not sure ig this argument is correct !!!
   description     = "Production server network interface"
 
   tags   = {
@@ -351,9 +352,11 @@ resource "aws_instance" "production_server" {
   ami                         = data.aws_ami.ubuntu-server.id
   instance_type               = "t2.micro"
   key_name                    = aws_key_pair.generated_key_prod.key_name
-  subnet_id                   = aws_subnet.subnet_prod.id
-  vpc_security_group_ids      = [aws_security_group.sg_prod.id]
+  #subnet_id                   = aws_subnet.subnet_prod.id
+  #vpc_security_group_ids      = [aws_security_group.sg_prod.id]
 
+  #if network_interface block is specified then subnet_id and vpc_security_group_ids should not be specified, because they will cause a conflict configuration error
+  #alternatively use aws_network_interafce and aws_network_interface_attachment blocks
   network_interface {
     network_interface_id = aws_network_interface.network_interface_prod.id
     device_index         = 0
