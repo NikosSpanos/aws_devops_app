@@ -216,7 +216,7 @@ resource "aws_security_group_rule" "http_rule_prod" {
 }
 
 # Create fifth (inbound) security rule to allow pings of public ip address of ec2 instance from local machine
-resource "aws_security_group_rule" "http_rule_prod" {
+resource "aws_security_group_rule" "ping_public_ip_sg_rule" {
   type              = "ingress"
   from_port         = 42
   to_port           = 42
