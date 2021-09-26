@@ -13,7 +13,7 @@ resource "aws_vpc" "vpc_prod" {
   enable_dns_hostnames = true
   enable_dns_support = true
 
-    tags = {
+  tags = {
       Name = "production-private-cloud"
   }
 }
@@ -97,7 +97,7 @@ resource "aws_network_acl_rule" "ssh_acl_rule_prod_in" {
   rule_number    = 120
   protocol       = "tcp"
   rule_action    = "allow"
-  cidr_block     = "${chomp(data.http.myip.body)}/32"
+  cidr_block     = "94.70.57.33/32"
   from_port      = 22
   to_port        = 22
 }
@@ -117,7 +117,7 @@ resource "aws_network_acl_rule" "ping_acl_rule_prod_in" {
   rule_number    = 140
   protocol       = "icmp"
   rule_action    = "allow"
-  cidr_block     = "${chomp(data.http.myip.body)}/32"
+  cidr_block     = "94.70.57.33/32"
   icmp_type      = 42
   icmp_code      = 0
 }
@@ -179,7 +179,7 @@ resource "aws_security_group_rule" "ssh_inbound_rule_prod" {
   from_port         = 22
   to_port           = 22
   protocol          = "tcp"
-  cidr_blocks       = ["${chomp(data.http.myip.body)}/32"] #aws_vpc.vpc_prod.cidr_block, "0.0.0.0/0"
+  cidr_blocks       = ["94.70.57.33/32"] #aws_vpc.vpc_prod.cidr_block, "0.0.0.0/0"
   security_group_id = aws_security_group.sg_prod.id
   description       = "security rule to open port 22 for ssh connection"
 }
@@ -223,7 +223,7 @@ resource "aws_security_group_rule" "ping_public_ip_sg_rule" {
   from_port         = 42
   to_port           = 42
   protocol          = "icmp"
-  cidr_blocks       = ["${chomp(data.http.myip.body)}/32"] #aws_vpc.vpc_prod.cidr_block, "0.0.0.0/0"
+  cidr_blocks       = ["94.70.57.33/32"] #aws_vpc.vpc_prod.cidr_block, "0.0.0.0/0"
   security_group_id = aws_security_group.sg_prod.id
   description       = "allow pinging elastic public ipv4 address of ec2 instance from local machine"
 }
@@ -320,11 +320,11 @@ resource "aws_route_table_association" "main-public-1-b" {
 # ---------------------------------------- Step 8: Create the AWS EC2 instance ----------------------------------------
 data "aws_ami" "ubuntu-server" {
   most_recent = true
-  owners      = ["099720109477"]
+  owners      = ["aws-marketplace"]
 
   filter {
     name   = "name"
-    values = ["ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-20210430"]
+    values = ["ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*"]
   }
 
   filter {
@@ -349,19 +349,21 @@ data "aws_ami" "ubuntu-server" {
 }
 
 resource "aws_instance" "production_server" {
-  ami                         = data.aws_ami.ubuntu-server.id
+  ami                         = "ami-0a5a9780e8617afe7" #data.aws_ami.ubuntu-server.id
   instance_type               = "t2.micro"
   key_name                    = aws_key_pair.generated_key_prod.key_name
-  availability_zone           = data.aws_availability_zones.available.names[0]
+  #availability_zone           = data.aws_availability_zones.available.names[0] => did not fix account verification error
   #subnet_id                   = aws_subnet.subnet_prod.id
   #vpc_security_group_ids      = [aws_security_group.sg_prod.id]
 
+  #----Notes regarding network interface block---
   #if network_interface block is specified then subnet_id and vpc_security_group_ids should not be specified, because they will cause a conflict configuration error
   #alternatively use aws_network_interafce and aws_network_interface_attachment blocks
-  network_interface {
-    network_interface_id = aws_network_interface.network_interface_prod.id
-    device_index         = 0
-  }
+  #Block below might cause account verification error
+  # network_interface {
+  #   network_interface_id = aws_network_interface.network_interface_prod.id
+  #   device_index         = 0
+  # }
 
   //user_data = file("install_modules_1.sh")
   //user_data = data.template_file.user_data.rendered
@@ -382,6 +384,12 @@ resource "aws_instance" "production_server" {
   tags   = {
     Name = "production-server"
   }
+}
+
+resource "aws_network_interface_attachment" "eni-server-attachment" {
+  instance_id          = aws_instance.production_server.id
+  network_interface_id = aws_network_interface.network_interface_prod.id
+  device_index         = 0
 }
 
 # ---------------------------------------- Step 9: Create the Elastic Public IP ----------------------------------------
