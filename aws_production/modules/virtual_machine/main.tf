@@ -97,7 +97,7 @@ resource "aws_network_acl_rule" "ssh_acl_rule_prod_in" {
   rule_number    = 120
   protocol       = "tcp"
   rule_action    = "allow"
-  cidr_block     = ["${chomp(data.http.myip.body)}/32"]
+  cidr_block     = "${chomp(data.http.myip.body)}/32"
   from_port      = 22
   to_port        = 22
 }
@@ -160,6 +160,7 @@ resource "aws_network_acl_rule" "port_acl_rule_prod_out" {
   network_acl_id = aws_network_acl.production_acl_network.id
   egress         = true
   protocol       = -1
+  rule_action    = "allow"
   rule_number    = 150
   cidr_block     = "0.0.0.0/0"
   from_port      = 0
@@ -400,10 +401,6 @@ resource "aws_eip_association" "eip_assoc" {
   instance_id   = aws_instance.production_server.id
   allocation_id = aws_eip.prod_server_public_ip.id
   #network_interface_id = aws_network_interface.nic_prod.id
-  
-  tags   = {
-    Name = "production-network-interface-association"
-  }
 }
 
 # ---------------------------------------- Step 11: Install modules in production server ----------------------------------------
