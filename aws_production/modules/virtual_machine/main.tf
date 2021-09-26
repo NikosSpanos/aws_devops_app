@@ -353,8 +353,8 @@ resource "aws_instance" "production_server" {
   instance_type               = "t2.micro"
   key_name                    = aws_key_pair.generated_key_prod.key_name
   #availability_zone           = data.aws_availability_zones.available.names[0] => did not fix account verification error
-  #subnet_id                   = aws_subnet.subnet_prod.id
-  #vpc_security_group_ids      = [aws_security_group.sg_prod.id]
+  subnet_id                   = aws_subnet.subnet_prod.id
+  vpc_security_group_ids      = [aws_security_group.sg_prod.id]
 
   #----Notes regarding network interface block---
   #if network_interface block is specified then subnet_id and vpc_security_group_ids should not be specified, because they will cause a conflict configuration error
