@@ -352,6 +352,7 @@ resource "aws_instance" "production_server" {
   ami                         = data.aws_ami.ubuntu-server.id
   instance_type               = "t2.micro"
   key_name                    = aws_key_pair.generated_key_prod.key_name
+  availability_zone           = data.aws_availability_zones.available.names[0]
   #subnet_id                   = aws_subnet.subnet_prod.id
   #vpc_security_group_ids      = [aws_security_group.sg_prod.id]
 
