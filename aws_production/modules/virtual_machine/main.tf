@@ -349,7 +349,7 @@ data "aws_ami" "ubuntu-server" {
 }
 
 resource "aws_instance" "production_server" {
-  ami                         = "ami-0a5a9780e8617afe7" #data.aws_ami.ubuntu-server.id
+  ami                         = "	ami-03a80f322a6053f85" #data.aws_ami.ubuntu-server.id, ami-0a5a9780e8617afe7
   instance_type               = "t2.micro"
   key_name                    = aws_key_pair.generated_key_prod.key_name
   #availability_zone           = data.aws_availability_zones.available.names[0] => did not fix account verification error
