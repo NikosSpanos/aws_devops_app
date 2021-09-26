@@ -72,7 +72,7 @@ data "http" "myip" {
   url = "http://ipv4.icanhazip.com"
 }
 
-resource "aws_network_acl_rule" "http_acl_rule_prod" {
+resource "aws_network_acl_rule" "http_acl_rule_prod_in" {
   network_acl_id = aws_network_acl.production_acl_network.id
   rule_number    = 100
   protocol       = "tcp"
@@ -82,7 +82,7 @@ resource "aws_network_acl_rule" "http_acl_rule_prod" {
   to_port        = 80
 }
 
-resource "aws_network_acl_rule" "https_acl_rule_prod" {
+resource "aws_network_acl_rule" "https_acl_rule_prod_in" {
   network_acl_id = aws_network_acl.production_acl_network.id
   rule_number    = 110
   protocol       = "tcp"
@@ -92,7 +92,7 @@ resource "aws_network_acl_rule" "https_acl_rule_prod" {
   to_port        = 443
 }
 
-resource "aws_network_acl_rule" "ssh_acl_rule_prod" {
+resource "aws_network_acl_rule" "ssh_acl_rule_prod_in" {
   network_acl_id = aws_network_acl.production_acl_network.id
   rule_number    = 120
   protocol       = "tcp"
@@ -102,7 +102,7 @@ resource "aws_network_acl_rule" "ssh_acl_rule_prod" {
   to_port        = 22
 }
 
-resource "aws_network_acl_rule" "http_more_public_ip" {
+resource "aws_network_acl_rule" "http_more_public_ip_in" {
   network_acl_id = aws_network_acl.production_acl_network.id
   rule_number    = 130
   protocol       = "tcp"
@@ -112,7 +112,7 @@ resource "aws_network_acl_rule" "http_more_public_ip" {
   to_port        = 8080
 }
 
-resource "aws_network_acl_rule" "ping_acl_rule_prod" {
+resource "aws_network_acl_rule" "ping_acl_rule_prod_in" {
   network_acl_id = aws_network_acl.production_acl_network.id
   rule_number    = 140
   rule_action    = "allow"
@@ -122,7 +122,7 @@ resource "aws_network_acl_rule" "ping_acl_rule_prod" {
 }
 
 # ACL outbound
-resource "aws_network_acl_rule" "http_acl_rule_prod" {
+resource "aws_network_acl_rule" "http_acl_rule_prod_out" {
   network_acl_id = aws_network_acl.production_acl_network.id
   egress         = true
   rule_number    = 100
@@ -133,7 +133,7 @@ resource "aws_network_acl_rule" "http_acl_rule_prod" {
   to_port        = 80
 }
 
-resource "aws_network_acl_rule" "https_acl_rule_prod" {
+resource "aws_network_acl_rule" "https_acl_rule_prod_out" {
   network_acl_id = aws_network_acl.production_acl_network.id
   egress         = true
   rule_number    = 110
@@ -144,7 +144,7 @@ resource "aws_network_acl_rule" "https_acl_rule_prod" {
   to_port        = 443
 }
 
-resource "aws_network_acl_rule" "ping_public_ip" {
+resource "aws_network_acl_rule" "ping_public_ip_out" {
   network_acl_id = aws_network_acl.production_acl_network.id
   egress         = true
   rule_number   = 130
@@ -155,7 +155,7 @@ resource "aws_network_acl_rule" "ping_public_ip" {
   to_port        = 8080
 }
 
-resource "aws_network_acl_rule" "port_acl_rule_prod" {
+resource "aws_network_acl_rule" "port_acl_rule_prod_out" {
   network_acl_id = aws_network_acl.production_acl_network.id
   egress         = true 
   rule_number    = 150
@@ -172,7 +172,7 @@ resource "aws_security_group" "sg_prod" {
 }
 
 # Create first (inbound) security rule to open port 22 for ssh connection request
-resource "aws_security_group_rule" "ssh_rule_prod" {
+resource "aws_security_group_rule" "ssh_inbound_rule_prod" {
   type              = "ingress"
   from_port         = 22
   to_port           = 22
@@ -183,7 +183,7 @@ resource "aws_security_group_rule" "ssh_rule_prod" {
 }
 
 # Create second (inbound) security rule to open port 8080 for jenkins and the application app
-resource "aws_security_group_rule" "internet_rule_prod" {
+resource "aws_security_group_rule" "internet_inbound_rule_prod" {
   type              = "ingress"
   from_port         = 8080
   to_port           = 8080
@@ -194,7 +194,7 @@ resource "aws_security_group_rule" "internet_rule_prod" {
 }
 
 # Create third (inbound) security rule to open port 80 for HTTP requests
-resource "aws_security_group_rule" "http_rule_prod" {
+resource "aws_security_group_rule" "http_inbound_rule_prod" {
   type              = "ingress"
   from_port         = 80
   to_port           = 80
@@ -205,7 +205,7 @@ resource "aws_security_group_rule" "http_rule_prod" {
 }
 
 # Create fourth (inbound) security rule to open port 443 for HTTPS requests
-resource "aws_security_group_rule" "http_rule_prod" {
+resource "aws_security_group_rule" "https_inbound_rule_prod" {
   type              = "ingress"
   from_port         = 443
   to_port           = 443
