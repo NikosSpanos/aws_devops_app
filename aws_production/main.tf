@@ -18,7 +18,8 @@ terraform {
 //note: every input variable in main.tf file needs to be declared in a separate variables.tf file. Otherwise, undeclared variable error is generated in terraform plan.
 
 provider "aws"{
-      region = var.location //configure aws cli => https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2-linux.html
+      profile    = "default"
+      region     = var.location //configure aws cli => https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2-linux.html
       access_key = var.aws_access_key
       secret_key = var.aws_secret_key
       #shared_credentials_file = var.credentials_path

@@ -35,7 +35,7 @@ data "aws_availability_zones" "available" {
 resource "aws_subnet" "subnet_prod" {
   vpc_id            = aws_vpc.vpc_prod.id
   cidr_block        = "10.0.1.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
+  availability_zone = "us-east-2a" #data.aws_availability_zones.available.names[0]
   depends_on        = [aws_internet_gateway.gw]
 
   map_public_ip_on_launch = true
@@ -48,7 +48,7 @@ resource "aws_subnet" "subnet_prod" {
 resource "aws_subnet" "subnet_prod_id2" {
   vpc_id            = aws_vpc.vpc_prod.id
   cidr_block        = "10.0.2.0/24" //a second subnet can't use the same cidr block as the first subnet
-  availability_zone = data.aws_availability_zones.available.names[1]
+  availability_zone = "us-east-2b" #data.aws_availability_zones.available.names[1]
   depends_on        = [aws_internet_gateway.gw]
 
   tags = {
@@ -324,7 +324,7 @@ data "aws_ami" "ubuntu-server" {
 
   filter {
     name   = "name"
-    values = ["ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*"]
+    values = ["ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*"] #community AMIs
   }
 
   filter {
