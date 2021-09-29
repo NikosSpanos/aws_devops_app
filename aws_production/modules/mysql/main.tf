@@ -43,8 +43,8 @@ resource "aws_db_subnet_group" "default" {
 
 #MySQL Server
 resource "aws_db_instance" "mysql_server_prod" {
-  allocated_storage      = 1
-  max_allocated_storage  = 2
+  allocated_storage      = 5
+  max_allocated_storage  = 6
   engine                 = "mysql"
   engine_version         = "5.7"
   instance_class         = "db.t2.micro"

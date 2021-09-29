@@ -437,7 +437,7 @@ resource "aws_instance" "production_server" {
   ebs_block_device {
     device_name = "/dev/sda1"
     volume_type = "standard"
-    volume_size = 1
+    volume_size = 8
   }
 
   provisioner "file" {
