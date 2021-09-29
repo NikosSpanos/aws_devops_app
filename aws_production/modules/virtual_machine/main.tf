@@ -322,9 +322,9 @@ resource "aws_eip_association" "eip_assoc" {
   #dont use instance, network_interface_id at the same time
   #instance_id   = aws_instance.production_server.id
   allocation_id = aws_eip.prod_server_public_ip.id
-  network_interface_id = aws_network_interface.nic_prod.id
+  network_interface_id = aws_network_interface.network_interface_prod.id
 
-  depends_on = [aws_eip.prod_server_public_ip]
+  depends_on = [aws_eip.prod_server_public_ip, aws_network_interface.network_interface_prod]
 }
 
 resource "aws_network_acl_rule" "ssh_acl_rule_prod_in3" {
