@@ -1,4 +1,5 @@
 #! /bin/bash
+echo "Installing modules..."
 sudo apt-get update
 sudo apt-get install -y openjdk-8-jdk
 sudo apt install -y python2.7 python-pip

@@ -176,12 +176,12 @@ resource "aws_network_acl_rule" "ping_public_ip_out" {
   to_port        = 8080
 }
 
-resource "aws_network_acl_rule" "port_acl_rule_prod_out" {
+resource "aws_network_acl_rule" "all_protocols_acl_rule_prod_out" {
   network_acl_id = aws_network_acl.production_acl_network.id
   egress         = true
   protocol       = -1
   rule_action    = "allow"
-  rule_number    = 170
+  rule_number    = 180
   cidr_block     = "0.0.0.0/0"
   from_port      = 0
   to_port        = 0
@@ -294,7 +294,7 @@ resource "aws_key_pair" "generated_key_prod" {
 resource "aws_network_interface" "network_interface_prod" {
   subnet_id       = aws_subnet.subnet_prod.id
   security_groups = [aws_security_group.sg_prod.id]
-  #private_ip      = aws_eip.prod_server_public_ip.private_ip #!!! not sure ig this argument is correct !!!
+  #private_ip      = aws_eip.prod_server_public_ip.private_ip #!!! not sure if this argument is correct !!!
   description     = "Production server network interface"
 
   tags   = {
@@ -302,7 +302,56 @@ resource "aws_network_interface" "network_interface_prod" {
   }
 }
 
-# ---------------------------------------- Step 7: Create route table with rules ----------------------------------------
+# ---------------------------------------- Step 7: Create the Elastic Public IP after having created the network interface ----------------------------------------
+
+resource "aws_eip" "prod_server_public_ip" {
+  vpc               = true
+  #instance          = aws_instance.production_server.id
+  network_interface = aws_network_interface.network_interface_prod.id
+  #don't specify both instance and a network_interface id, one of the two!
+  
+  depends_on        = [aws_internet_gateway.gw, aws_network_interface.network_interface_prod]
+  tags   = {
+    Name = "production-elastic-ip"
+  }
+}
+
+# ---------------------------------------- Step 8: Associate public ip to network interface ----------------------------------------
+
+resource "aws_eip_association" "eip_assoc" {
+  #dont use instance, network_interface_id at the same time
+  #instance_id   = aws_instance.production_server.id
+  allocation_id = aws_eip.prod_server_public_ip.id
+  network_interface_id = aws_network_interface.nic_prod.id
+
+  depends_on = [aws_eip.prod_server_public_ip]
+}
+
+resource "aws_network_acl_rule" "ssh_acl_rule_prod_in3" {
+  network_acl_id = aws_network_acl.production_acl_network.id
+  rule_number    = 170
+  protocol       = "tcp"
+  rule_action    = "allow"
+  cidr_block     = "${aws_eip.prod_server_public_ip.public_ip}/32"
+  from_port      = 22
+  to_port        = 22
+
+  depends_on     = [aws_eip.prod_server_public_ip]
+}
+
+resource "aws_security_group_rule" "ssh_inbound_rule_prod_null_instance" {
+  type              = "ingress"
+  from_port         = 22
+  to_port           = 22
+  protocol          = "tcp"
+  cidr_blocks       = ["${aws_eip.prod_server_public_ip.public_ip}/32"] #aws_vpc.vpc_prod.cidr_block, "0.0.0.0/0"
+  security_group_id = aws_security_group.sg_prod.id
+  description       = "security rule to open port 22 for ssh connection"
+
+  depends_on     = [aws_eip.prod_server_public_ip]
+}
+
+# ---------------------------------------- Step 9: Create route table with rules ----------------------------------------
 
 resource "aws_route_table" "route_table_prod" {
   vpc_id = aws_vpc.vpc_prod.id
@@ -337,7 +386,7 @@ resource "aws_route_table_association" "main-public-1-b" {
   route_table_id = aws_route_table.route_table_prod.id
 }
 
-# ---------------------------------------- Step 8: Create the AWS EC2 instance ----------------------------------------
+# ---------------------------------------- Step 10: Create the AWS EC2 instance ----------------------------------------
 data "aws_ami" "ubuntu-server" {
   most_recent = true
   owners      = ["aws-marketplace"]
@@ -372,18 +421,60 @@ resource "aws_instance" "production_server" {
   ami                         = "ami-00399ec92321828f5" #data.aws_ami.ubuntu-server.id, ami-0a5a9780e8617afe7
   instance_type               = "t2.micro"
   key_name                    = aws_key_pair.generated_key_prod.key_name
-  #availability_zone           = data.aws_availability_zones.available.names[0] => did not fix account verification error
-  subnet_id                   = aws_subnet.subnet_prod.id
-  vpc_security_group_ids      = [aws_security_group.sg_prod.id]
+  #subnet_id                   = aws_subnet.subnet_prod.id
+  #vpc_security_group_ids      = [aws_security_group.sg_prod.id]
 
   #----Notes regarding network interface block---
   #if network_interface block is specified then subnet_id and vpc_security_group_ids should not be specified, because they will cause a conflict configuration error
   #alternatively use aws_network_interafce and aws_network_interface_attachment blocks
-  #Block below might cause account verification error
-  # network_interface {
-  #   network_interface_id = aws_network_interface.network_interface_prod.id
-  #   device_index         = 0
+
+  #The block below might fix the error of attaching default network interface at index 0 
+  network_interface {
+    network_interface_id = aws_network_interface.network_interface_prod.id
+    device_index         = 0
+  }
+
+  ebs_block_device {
+    device_name = "/dev/sda1"
+    volume_type = "standard"
+    volume_size = 1
+  }
+
+  provisioner "file" {
+    source      = "/etc/install_modules_1.sh"
+    destination = "/dev/install_modules_1.sh"
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "chmod +x /dev/install_modules_1.sh",
+      "sudo bash /dev/install_modules_1.sh"
+    ]
+  }
+
+  connection {
+    type        = "ssh"
+    host        = aws_eip.prod_server_public_ip.public_ip //Error: host for provisioner cannot be empty -> https://github.com/hashicorp/terraform-provider-aws/issues/10977
+    user        = "ubuntu"
+    private_key = "${chomp(tls_private_key.ssh_key_prod.private_key_pem)}" //tls_private_key.ssh_key_prod.private_key_pem
+    timeout     = "1m"
+  }
+
+  # provisioner "remote-exec" {
+  #   inline = [
+  #     "echo 'Installing modules...'",
+  #     "sudo apt-get update",
+  #     "sudo apt-get install -y openjdk-8-jdk",
+  #     "sudo apt install -y python2.7 python-pip",
+  #     "sudo apt install -y docker.io",
+  #     "sudo systemctl start docker",
+  #     "sudo systemctl enable docker",
+  #     "pip install setuptools",
+  #     "echo 'Modules installed via Terraform'"
+  #   ]
+  #   on_failure = fail
   # }
+
 
   //user_data = file("install_modules_1.sh")
   //user_data = data.template_file.user_data.rendered
@@ -404,81 +495,42 @@ resource "aws_instance" "production_server" {
   tags   = {
     Name = "production-server"
   }
-}
 
-resource "aws_network_interface_attachment" "eni-server-attachment" {
-  instance_id          = aws_instance.production_server.id
-  network_interface_id = aws_network_interface.network_interface_prod.id
-  device_index         = 0
-}
-
-# ---------------------------------------- Step 9: Create the Elastic Public IP ----------------------------------------
-
-resource "aws_eip" "prod_server_public_ip" {
-  vpc               = true
-  instance          = aws_instance.production_server.id
-  #network_interface = aws_network_interface.network_interface_prod.id
-  #don't specify both instance and a network_interface id, one of the two!
-  
-  depends_on        = [aws_internet_gateway.gw, aws_instance.production_server]
-  tags   = {
-    Name = "production-elastic-ip"
+  volume_tags = {
+    Name = "production-volume"
   }
 }
 
-# ---------------------------------------- Step 10: Associate public ip to instance or network interface ----------------------------------------
-
-resource "aws_eip_association" "eip_assoc" {
-  #dont use instance, network_interface_id at the same time
-  instance_id   = aws_instance.production_server.id
-  allocation_id = aws_eip.prod_server_public_ip.id
-  #network_interface_id = aws_network_interface.nic_prod.id
-}
+# resource "aws_network_interface_attachment" "eni-server-attachment" {
+#   instance_id          = aws_instance.production_server.id
+#   network_interface_id = aws_network_interface.network_interface_prod.id
+#   device_index         = 0
+# }
 
 # ---------------------------------------- Step 11: Install modules in production server ----------------------------------------
 
-resource "null_resource" "install_modules" {
-  depends_on    = [aws_eip.prod_server_public_ip, aws_instance.production_server]
-  connection {
-    type        = "ssh"
-    host        = aws_eip.prod_server_public_ip.public_ip //Error: host for provisioner cannot be empty -> https://github.com/hashicorp/terraform-provider-aws/issues/10977
-    user        = "ubuntu"
-    private_key = "${chomp(tls_private_key.ssh_key_prod.private_key_pem)}" //tls_private_key.ssh_key_prod.private_key_pem
-    timeout     = "1m"
-  }
-
-  provisioner "remote-exec" {
-    inline = [
-      "echo 'Installing modules...'",
-      "sudo apt-get update",
-      "sudo apt-get install -y openjdk-8-jdk",
-      "sudo apt install -y python2.7 python-pip",
-      "sudo apt install -y docker.io",
-      "sudo systemctl start docker",
-      "sudo systemctl enable docker",
-      "pip install setuptools",
-      "echo 'Modules installed via Terraform'"
-    ]
-    on_failure = fail
-  }
+# resource "null_resource" "install_modules" {
+#   depends_on    = [aws_eip.prod_server_public_ip, aws_instance.production_server, aws_network_acl_rule.ssh_acl_rule_prod_in3, aws_security_group_rule.ssh_inbound_rule_prod_null_instance]
+#   connection {
+#     type        = "ssh"
+#     host        = aws_eip.prod_server_public_ip.public_ip //Error: host for provisioner cannot be empty -> https://github.com/hashicorp/terraform-provider-aws/issues/10977
+#     user        = "ubuntu"
+#     private_key = "${chomp(tls_private_key.ssh_key_prod.private_key_pem)}" //tls_private_key.ssh_key_prod.private_key_pem
+#     timeout     = "1m"
+#   }
 
 #   provisioner "remote-exec" {
 #     inline = [
-#       "sudo apt update",
+#       "echo 'Installing modules...'",
+#       "sudo apt-get update",
 #       "sudo apt-get install -y openjdk-8-jdk",
 #       "sudo apt install -y python2.7 python-pip",
-#       "pip install setuptools"
-#     ]
-#     on_failure = fail
-#   }
-
-#   provisioner "remote-exec" {
-#     inline = [
-#       "sudo apt-get update",
 #       "sudo apt install -y docker.io",
 #       "sudo systemctl start docker",
-#       "sudo systemctl enable docker"
+#       "sudo systemctl enable docker",
+#       "pip install setuptools",
+#       "echo 'Modules installed via Terraform'"
 #     ]
 #     on_failure = fail
 #   }
-}
+# }

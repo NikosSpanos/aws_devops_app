@@ -57,6 +57,7 @@ resource "aws_db_instance" "mysql_server_prod" {
   vpc_security_group_ids = [var.vm_instance_sg] //in order to use security group id here, we need to first export it as output in the vm module (where we first created this security group)
   availability_zone      = var.subnet_availability_zone
   db_subnet_group_name   = aws_db_subnet_group.default.name
+  storage_type           = "standard"
 
   tags = {
     Name = "production-mysql-server"
