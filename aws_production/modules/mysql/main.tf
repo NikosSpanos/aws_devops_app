@@ -10,11 +10,11 @@ terraform {
 
 #Random id generator for unique server names
 resource "random_string" "string_server" {
-	length  = 5
-    lower = true
-    upper = false
+	length    = 5
+    lower   = true
+    upper   = false
     special = false
-    number = false
+    number  = false
 }
 
 resource "aws_db_parameter_group" "db_param_group_prod" {
@@ -43,7 +43,8 @@ resource "aws_db_subnet_group" "default" {
 
 #MySQL Server
 resource "aws_db_instance" "mysql_server_prod" {
-  allocated_storage      = 5120
+  allocated_storage      = 1
+  max_allocated_storage  = 2
   engine                 = "mysql"
   engine_version         = "5.7"
   instance_class         = "db.t2.micro"
@@ -58,6 +59,6 @@ resource "aws_db_instance" "mysql_server_prod" {
   db_subnet_group_name   = aws_db_subnet_group.default.name
 
   tags = {
-    Name = "${var.prefix}_mysql_server"
+    Name = "production-mysql-server"
   }
 }

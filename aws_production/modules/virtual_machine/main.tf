@@ -102,9 +102,19 @@ resource "aws_network_acl_rule" "ssh_acl_rule_prod_in" {
   to_port        = 22
 }
 
-resource "aws_network_acl_rule" "http_more_public_ip_in" {
+resource "aws_network_acl_rule" "ssh_acl_rule_prod_in2" {
   network_acl_id = aws_network_acl.production_acl_network.id
   rule_number    = 130
+  protocol       = "tcp"
+  rule_action    = "allow"
+  cidr_block     = "79.129.48.158/32"
+  from_port      = 22
+  to_port        = 22
+}
+
+resource "aws_network_acl_rule" "http_more_public_ip_in" {
+  network_acl_id = aws_network_acl.production_acl_network.id
+  rule_number    = 140
   protocol       = "tcp"
   rule_action    = "allow"
   cidr_block     = "0.0.0.0/0"
@@ -114,10 +124,20 @@ resource "aws_network_acl_rule" "http_more_public_ip_in" {
 
 resource "aws_network_acl_rule" "ping_acl_rule_prod_in" {
   network_acl_id = aws_network_acl.production_acl_network.id
-  rule_number    = 140
+  rule_number    = 150
   protocol       = "icmp"
   rule_action    = "allow"
   cidr_block     = "94.70.57.33/32"
+  icmp_type      = 42
+  icmp_code      = 0
+}
+
+resource "aws_network_acl_rule" "ping_acl_rule_prod_in2" {
+  network_acl_id = aws_network_acl.production_acl_network.id
+  rule_number    = 160
+  protocol       = "icmp"
+  rule_action    = "allow"
+  cidr_block     = "79.129.48.158/32"
   icmp_type      = 42
   icmp_code      = 0
 }
@@ -148,7 +168,7 @@ resource "aws_network_acl_rule" "https_acl_rule_prod_out" {
 resource "aws_network_acl_rule" "ping_public_ip_out" {
   network_acl_id = aws_network_acl.production_acl_network.id
   egress         = true
-  rule_number   = 130
+  rule_number   = 140
   protocol       = "tcp"
   rule_action    = "allow"
   cidr_block     = "0.0.0.0/0"
@@ -161,7 +181,7 @@ resource "aws_network_acl_rule" "port_acl_rule_prod_out" {
   egress         = true
   protocol       = -1
   rule_action    = "allow"
-  rule_number    = 150
+  rule_number    = 170
   cidr_block     = "0.0.0.0/0"
   from_port      = 0
   to_port        = 0
@@ -179,7 +199,7 @@ resource "aws_security_group_rule" "ssh_inbound_rule_prod" {
   from_port         = 22
   to_port           = 22
   protocol          = "tcp"
-  cidr_blocks       = ["94.70.57.33/32"] #aws_vpc.vpc_prod.cidr_block, "0.0.0.0/0"
+  cidr_blocks       = ["94.70.57.33/32", "79.129.48.158/32"] #aws_vpc.vpc_prod.cidr_block, "0.0.0.0/0"
   security_group_id = aws_security_group.sg_prod.id
   description       = "security rule to open port 22 for ssh connection"
 }
@@ -223,7 +243,7 @@ resource "aws_security_group_rule" "ping_public_ip_sg_rule" {
   from_port         = 42
   to_port           = 42
   protocol          = "icmp"
-  cidr_blocks       = ["94.70.57.33/32"] #aws_vpc.vpc_prod.cidr_block, "0.0.0.0/0"
+  cidr_blocks       = ["94.70.57.33/32", "79.129.48.158/32"] #aws_vpc.vpc_prod.cidr_block, "0.0.0.0/0"
   security_group_id = aws_security_group.sg_prod.id
   description       = "allow pinging elastic public ipv4 address of ec2 instance from local machine"
 }
@@ -260,7 +280,7 @@ resource "tls_private_key" "ssh_key_prod" {
 
 # ---------------------------------------- Step 5: Generate aws_key_pair ----------------------------------------
 resource "aws_key_pair" "generated_key_prod" {
-  key_name   = "${var.prefix}_server_ssh_key"
+  key_name   = "${var.prefix}-server-ssh-key"
   public_key = tls_private_key.ssh_key_prod.public_key_openssh
 
   tags   = {

@@ -1,12 +1,8 @@
-variable "prefix" {
-  description = "Resource group prefix (i.e development/ production)"
-}
-
-variable "vm_instance_sg"{
+variable "vm_instance_sg" {
 	description = "Security group id created in vm instance object"
 }
 
-variable "ec2_instance_subnet"{
+variable "ec2_instance_subnet" { 
 	description = "Subnet id created in vm instance object"
 }
 
@@ -22,11 +18,11 @@ variable "mysql_master_password" {
   sensitive   = true
 }
 
-variable "subnet_availability_zone"{
+variable "subnet_availability_zone" {
 	description = "Availability zone of subnet"
 }
 
 
-variable "ec2_instance_subnet_id2"{
+variable "ec2_instance_subnet_id2" {
 	description = "Second subnet id created in vm instance object"
 }
