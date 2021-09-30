@@ -28,7 +28,7 @@ chmod 600 ./mykey
 # else
     # echo 'Connecting through known hosts failed... \
     # Deleting host and reconnecting.'
-ssh-keygen -f "$HOME/.ssh/known_hosts" -R "$file_ip_v2"
+#ssh-keygen -f "$HOME/.ssh/known_hosts" -R "$file_ip_v2"
 ssh -vvv -i ./mykey ubuntu@$file_ip_v2
 # fi
 
