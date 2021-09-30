@@ -251,7 +251,7 @@ resource "aws_security_group_rule" "ssh_inbound_rule_prod" {
 resource "aws_security_group_rule" "ping_public_ip_sg_rule" {
   type              = "ingress"
   from_port         = 8
-  to_port           = 8
+  to_port           = 0
   protocol          = "icmp"
   cidr_blocks       = ["94.70.57.33/32", "79.129.48.158/32"] #aws_vpc.vpc_prod.cidr_block, "0.0.0.0/0"
   security_group_id = aws_security_group.sg_prod.id
@@ -444,44 +444,44 @@ resource "aws_instance" "production_server" {
   #   ]
   # }
 
-  connection {
-    type        = "ssh"
-    host        = aws_eip.prod_server_public_ip.public_ip //Error: host for provisioner cannot be empty -> https://github.com/hashicorp/terraform-provider-aws/issues/10977
-    user        = "ubuntu"
-    private_key = "${chomp(tls_private_key.ssh_key_prod.private_key_pem)}" //tls_private_key.ssh_key_prod.private_key_pem
-    timeout     = "1m"
-  }
+  # connection {
+  #   type        = "ssh"
+  #   host        = aws_eip.prod_server_public_ip.public_ip //Error: host for provisioner cannot be empty -> https://github.com/hashicorp/terraform-provider-aws/issues/10977
+  #   user        = "ubuntu"
+  #   private_key = "${chomp(tls_private_key.ssh_key_prod.private_key_pem)}" //tls_private_key.ssh_key_prod.private_key_pem
+  #   timeout     = "1m"
+  # }
 
-  provisioner "remote-exec" {
-    inline = [
-      "echo 'Installing modules...'",
-      "sudo apt-get update",
-      "sudo apt-get install -y openjdk-8-jdk",
-      "sudo apt install -y python2.7 python-pip",
-      "sudo apt install -y docker.io",
-      "sudo systemctl start docker",
-      "sudo systemctl enable docker",
-      "pip install setuptools",
-      "echo 'Modules installed via Terraform'"
-    ]
-    on_failure = fail
-  }
+  # provisioner "remote-exec" {
+  #   inline = [
+  #     "echo 'Installing modules...'",
+  #     "sudo apt-get update",
+  #     "sudo apt-get install -y openjdk-8-jdk",
+  #     "sudo apt install -y python2.7 python-pip",
+  #     "sudo apt install -y docker.io",
+  #     "sudo systemctl start docker",
+  #     "sudo systemctl enable docker",
+  #     "pip install setuptools",
+  #     "echo 'Modules installed via Terraform'"
+  #   ]
+  #   on_failure = fail
+  # }
 
   //user_data = file("install_modules_1.sh")
   //user_data = data.template_file.user_data.rendered
 
-  # user_data= <<-EOF
-	# 	#! /bin/bash
-  #   echo "Installing modules..."
-  #   sudo apt-get update
-  #   sudo apt-get install -y openjdk-8-jdk
-  #   sudo apt install -y python2.7 python-pip
-  #   sudo apt install -y docker.io
-  #   sudo systemctl start docker
-  #   sudo systemctl enable docker
-  #   pip install setuptools
-  #   echo "Modules installed via Terraform"
-	# EOF
+  user_data= <<-EOF
+		#! /bin/bash
+    echo "Installing modules..."
+    sudo apt-get update
+    sudo apt-get install -y openjdk-8-jdk
+    sudo apt install -y python2.7 python-pip
+    sudo apt install -y docker.io
+    sudo systemctl start docker
+    sudo systemctl enable docker
+    pip install setuptools
+    echo "Modules installed via Terraform"
+	EOF
 
   tags   = {
     Name = "production-server"
