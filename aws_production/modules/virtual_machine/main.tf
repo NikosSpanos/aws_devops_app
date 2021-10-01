@@ -448,7 +448,7 @@ resource "aws_instance" "production_server" {
     type        = "ssh"
     host        = aws_eip.prod_server_public_ip.public_ip //Error: host for provisioner cannot be empty -> https://github.com/hashicorp/terraform-provider-aws/issues/10977
     user        = "ubuntu"
-    private_key = tls_private_key.ssh_key_prod.private_key_pem
+    private_key = "${chomp(tls_private_key.ssh_key_prod.private_key_pem)}"
     timeout     = "1m"
   }
 
