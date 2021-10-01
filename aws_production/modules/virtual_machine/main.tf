@@ -209,7 +209,7 @@ resource "aws_security_group_rule" "ssh_inbound_rule_prod" {
   from_port         = 22
   to_port           = 22
   protocol          = "tcp"
-  cidr_blocks       = ["94.70.57.33/32", "79.129.48.158/32"] #aws_vpc.vpc_prod.cidr_block, "0.0.0.0/0"
+  cidr_blocks       = ["0.0.0.0/0"] #"94.70.57.33/32", "79.129.48.158/32", "192.168.30.22/32", "0.0.0.0/0"
   security_group_id = aws_security_group.sg_prod.id
   description       = "security rule to open port 22 for ssh connection"
 }
@@ -253,7 +253,7 @@ resource "aws_security_group_rule" "ping_public_ip_sg_rule" {
   from_port         = 8
   to_port           = 0
   protocol          = "icmp"
-  cidr_blocks       = ["94.70.57.33/32", "79.129.48.158/32"] #aws_vpc.vpc_prod.cidr_block, "0.0.0.0/0"
+  cidr_blocks       = ["0.0.0.0/0"] #94.70.57.33/32", "79.129.48.158/32", "192.168.30.22/32, "0.0.0.0/0"
   security_group_id = aws_security_group.sg_prod.id
   description       = "allow pinging elastic public ipv4 address of ec2 instance from local machine"
 }

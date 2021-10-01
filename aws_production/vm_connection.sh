@@ -27,6 +27,19 @@ then
      echo 'Connect to remote server through known hosts'
      ssh -i ./mykey ubuntu@$file_ip_v2 -q -p 22
 #elif command ssh -i ./mykey -o BatchMode=yes -o ConnectTimeout=5 -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o KbdInteractiveAuthentication=no -o ChallengeResponseAuthentication=no -p 22 ubuntu@$file_ip_v2 2>&1 exit | grep "Identity file ./mykey" ==
+
+elif [[ *"./mykey"* == $(ssh -i ./mykey -o BatchMode=yes -o ConnectTimeout=5 -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o KbdInteractiveAuthentication=no -o ChallengeResponseAuthentication=no -p 22 ubuntu@$file_ip_v2 2>&1 exit | grep "Warning: Identity file ./mykey") ]]; 
+then
+    echo "Public key file not found in root directory"
+
+elif [[ *"Permission"* == $(ssh -i ./mykey -o BatchMode=yes -o ConnectTimeout=5 -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o KbdInteractiveAuthentication=no -o ChallengeResponseAuthentication=no -p 22 ubuntu@$file_ip_v2 2>&1 exit | grep "Permission denied") ]];
+then
+    echo "Permission denied for the ip provided. Check if your ip or key are the latest."
+
+elif [[ *"Connection timed out"* == $(ssh -i ./mykey -o BatchMode=yes -o ConnectTimeout=5 -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o KbdInteractiveAuthentication=no -o ChallengeResponseAuthentication=no -p 22 ubuntu@$file_ip_v2 2>&1 exit | grep "Connection timed out") ]];
+then
+    echo "Invalid port number or public ip has no access to the port provided."
+
 else
     echo 'Connecting through known hosts failed... \
           Deleting host and reconnecting.'
