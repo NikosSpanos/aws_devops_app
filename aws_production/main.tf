@@ -22,8 +22,6 @@ provider "aws"{
       region     = var.location //configure aws cli => https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2-linux.html
       access_key = var.aws_access_key
       secret_key = var.aws_secret_key
-      #shared_credentials_file = var.credentials_path
-      #profile = "default"
   }
 
 module "virtual_machines" {
@@ -36,7 +34,7 @@ module "mysql" {
     vm_instance_sg = module.virtual_machines.security_group_id
     mysql_master_username = var.mysql_master_username
     mysql_master_password = var.mysql_master_password
-    ec2_instance_subnet = module.virtual_machines.subnet_id
+    ec2_instance_subnet = module.virtual_machines.subnet_id #outputs of module: virtual_machines
     subnet_availability_zone = module.virtual_machines.subnet_availability_zone
     ec2_instance_subnet_id2 = module.virtual_machines.subnet_id2
 }

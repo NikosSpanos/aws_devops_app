@@ -1,5 +1,5 @@
 /aws_production/.terraform/
 /aws_production/.terraform.lock.hcl
 /aws_production/*.tfvars
-/aws_production/mykey
 /aws_production/*.txt
+/aws_production/aws_remote_production_server_key
