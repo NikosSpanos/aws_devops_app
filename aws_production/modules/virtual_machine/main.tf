@@ -209,7 +209,7 @@ resource "aws_security_group_rule" "ssh_inbound_rule_prod" {
   from_port         = 22
   to_port           = 22
   protocol          = "tcp"
-  cidr_blocks       = ["0.0.0.0/0"] #"94.70.57.33/32", "79.129.48.158/32", "192.168.30.22/32", "0.0.0.0/0"
+  cidr_blocks       = ["94.70.57.33/32", "79.129.48.158/32", "192.168.30.22/32"] #"94.70.57.33/32", "79.129.48.158/32", "192.168.30.22/32", "0.0.0.0/0"
   security_group_id = aws_security_group.sg_prod.id
   description       = "security rule to open port 22 for ssh connection"
 }
@@ -444,6 +444,7 @@ resource "aws_instance" "production_server" {
   #   ]
   # }
 
+  # Remote-exec seems to work only if all inbound traffic is allowed to ssh port of the ec2 instance
   connection {
     type        = "ssh"
     host        = aws_eip.prod_server_public_ip.public_ip //Error: host for provisioner cannot be empty -> https://github.com/hashicorp/terraform-provider-aws/issues/10977
@@ -470,9 +471,10 @@ resource "aws_instance" "production_server" {
     on_failure = fail
   }
 
-  //user_data = file("install_modules_1.sh")
-  //user_data = data.template_file.user_data.rendered
+  # user_data = file("install_modules_1.sh")
+  # user_data = data.template_file.user_data.rendered
 
+  # User_data seems to work with the predefined ip address that have access only to the ssh port of the ec2 instance
   # user_data= <<-EOF
 	# 	#! /bin/bash
   #   echo "Installing modules..."

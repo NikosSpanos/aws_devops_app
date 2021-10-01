@@ -21,12 +21,11 @@ file_ip_v2=$(terraform output -json | jq -r '.output_eip_public_ip.value')
 
 chmod 600 ./mykey
 
-ssh -i ./mykey -o BatchMode=yes -o ConnectTimeout=5 -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o KbdInteractiveAuthentication=no -o ChallengeResponseAuthentication=no -p 22 ubuntu@$file_ip_v2 2>&1 exit | grep -E -q "Permission denied|Connection timed out|Identity file ./mykey"
+ssh -i ./mykey -o BatchMode=yes -o ConnectTimeout=5 -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o KbdInteractiveAuthentication=no -o ChallengeResponseAuthentication=no -p 22 ubuntu@$file_ip_v2 2>&1 exit | grep -E -q "Permission denied|Connection timed out|Identity file ./mykey|Host key verification failed"
 if [ $? -eq 1 ]
 then
      echo 'Connect to remote server through known hosts'
-     ssh -i ./mykey ubuntu@$file_ip_v2 -q -p 22
-#elif command ssh -i ./mykey -o BatchMode=yes -o ConnectTimeout=5 -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o KbdInteractiveAuthentication=no -o ChallengeResponseAuthentication=no -p 22 ubuntu@$file_ip_v2 2>&1 exit | grep "Identity file ./mykey" ==
+     ssh -i ./mykey ubuntu@$file_ip_v2 -p 22
 
 elif [[ *"./mykey"* == $(ssh -i ./mykey -o BatchMode=yes -o ConnectTimeout=5 -o PubkeyAuthentication=yes -o PasswordAuthentication=no -o KbdInteractiveAuthentication=no -o ChallengeResponseAuthentication=no -p 22 ubuntu@$file_ip_v2 2>&1 exit | grep "Warning: Identity file ./mykey") ]]; 
 then
