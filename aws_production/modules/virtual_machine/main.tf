@@ -189,7 +189,7 @@ resource "aws_eip" "prod_server_public_ip" {
 
 resource "aws_eip_association" "eip_assoc" {
   allocation_id = aws_eip.prod_server_public_ip.id
-  network_interface_id = aws_network_interface.network_interface_prod.id # don't use instance, network_interface_id at the same time
+  network_interface_id = aws_network_interface.network_interface_prod.id # don't use instance_id and network_interface_id at the same time
 
   depends_on = [aws_eip.prod_server_public_ip, aws_network_interface.network_interface_prod]
 }
@@ -247,11 +247,11 @@ resource "aws_instance" "production_server" {
     device_index         = 0
   }
 
-  ebs_block_device {
-    device_name = "/dev/sda1"
-    volume_type = "standard"
-    volume_size = 8
-  }
+  # ebs_block_device {
+  #   device_name = "/dev/sda1"
+  #   volume_type = "standard"
+  #   volume_size = 8
+  # }
 
   # Remote-exec seems to work only if all inbound traffic is allowed to ssh port of the ec2 instance
   # connection {
@@ -301,7 +301,23 @@ resource "aws_instance" "production_server" {
     Name = "production-server"
   }
 
-  volume_tags = {
-    Name      = "production-volume"
-  }
+  # volume_tags = {
+  #   Name      = "production-volume"
+  # }
 }
+
+# resource "aws_ebs_volume" "production_server_ebs_volume" {
+#   availability_zone = "us-east-2"
+#   size              = 8
+#   type              = "standard"
+
+#   tags   = {
+#     Name = "production-volume"
+#   }
+# }
+
+# resource "aws_volume_attachment" "ebs_attachment" {
+#   device_name = "/dev/sdh"
+#   volume_id   = aws_ebs_volume.production_server_ebs_volume.id
+#   instance_id = aws_instance.production_server.id
+# }
