@@ -21,7 +21,7 @@ do
 done
 
 # Print helpFunction in case parameters are empty
-if [ -z "$EnvironmentName" ] || [ -z "$TerraformWorkingDirectory" || -z "$HomeDirectory"]
+if [ -z "$EnvironmentName" ] || [ -z "$TerraformWorkingDirectory" ] || [ -z "$HomeDirectory" ]
 then
    echo "Some or all of the parameters are empty";
    helpFunction
