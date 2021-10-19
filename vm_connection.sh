@@ -6,7 +6,7 @@ helpFunction()
    echo "Usage: $0 -n EnvironmentName -p TerraformWorkingDirectory" #$0 script name (i.e vm_connection.sh
    echo -e "\t-n The environment name of the publick key. Values accepted production/ development"
    echo -e "\t-p Terraform's working directory. Typically is the directory where the terraform has been initialized."
-   echo -e "\t-p User HOME directory. Typically is the path of the environment variable '(dollar sign)HOME'"
+   echo -e "\t-h User HOME directory. Typically is the path of the environment variable '(dollar sign)HOME'"
    exit 1 # Exit script after printing help
 }
 
@@ -36,7 +36,7 @@ echo "Environment: $EnvironmentName"
 echo "Terraform working directory: $TerraformWorkingDirectory"
 echo ""
 
-public_key_name="aws_remote_$1_server_key"
+public_key_name="aws_remote_${EnvironmentName}_server_key"
 
 echo -e "The public key of the server will be named: $public_key_name\n"
 
