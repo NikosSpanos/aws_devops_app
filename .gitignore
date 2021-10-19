@@ -3,3 +3,8 @@
 /aws_production/*.tfvars
 /aws_production/*.txt
 /aws_production/aws_remote_production_server_key
+
+/aws_development/.terraform/
+/aws_development/.terraform.lock.hcl
+/aws_development/*.tfvars
+/aws_development/aws_remote_development_server_key
