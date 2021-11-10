@@ -120,7 +120,7 @@ resource "aws_security_group_rule" "ping_public_ip_sg_rule" {
 }
 
 # Create third (inbound) security rule to open MySQL port 3306 for connection between VM and MySQL db
-resource "aws_security_group_rule" "https_outbound_rule_prod" {
+resource "aws_security_group_rule" "mysql_inbound_rule_prod" {
   type              = "ingress"
   from_port         = 3306
   to_port           = 3306
@@ -156,7 +156,7 @@ resource "aws_security_group_rule" "https_outbound_rule_prod" {
 }
 
 # Create third (outbound) security rule to open MySQL port 3306 for connection between VM and MySQL db
-resource "aws_security_group_rule" "https_outbound_rule_prod" {
+resource "aws_security_group_rule" "mysql_outbound_rule_prod" {
   depends_on        = [aws_eip.prod_server_public_ip]
   type              = "egress"
   from_port         = 3306
