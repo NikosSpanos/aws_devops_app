@@ -35,7 +35,7 @@ data "aws_availability_zones" "available" {
 resource "aws_subnet" "subnet_prod" {
   vpc_id            = aws_vpc.vpc_prod.id
   cidr_block        = "10.0.1.0/24"
-  availability_zone = "us-east-2a" #data.aws_availability_zones.available.names[0]
+  availability_zone = "eu-west-3a" #data.aws_availability_zones.available.names[0]
   depends_on        = [aws_internet_gateway.gw]
 
   map_public_ip_on_launch = true
@@ -48,7 +48,7 @@ resource "aws_subnet" "subnet_prod" {
 resource "aws_subnet" "subnet_prod_id2" {
   vpc_id            = aws_vpc.vpc_prod.id
   cidr_block        = "10.0.2.0/24" //a second subnet can't use the same cidr block as the first subnet
-  availability_zone = "us-east-2b" #data.aws_availability_zones.available.names[1]
+  availability_zone = "eu-west-3b" #data.aws_availability_zones.available.names[1]
   depends_on        = [aws_internet_gateway.gw]
 
   tags = {
@@ -103,12 +103,12 @@ resource "aws_security_group_rule" "ssh_inbound_rule_prod" {
   from_port         = 22
   to_port           = 22
   protocol          = "tcp"
-  cidr_blocks       = ["94.70.57.33/32", "79.129.48.158/32"] #"94.70.57.33/32", "79.129.48.158/32", "192.168.30.22/32", "0.0.0.0/0"
+  cidr_blocks       = ["94.70.57.33/32", "94.70.57.183/32", "79.129.48.158/32"] #"94.70.57.33/32", "79.129.48.158/32", "192.168.30.22/32", "0.0.0.0/0"
   security_group_id = aws_security_group.sg_prod.id
   description       = "security rule to open port 22 for ssh connection"
 }
 
-# Create fifth (inbound) security rule to allow pings of public ip address of ec2 instance from local machine
+# Create second (inbound) security rule to allow pings of public ip address of ec2 instance from local machine
 resource "aws_security_group_rule" "ping_public_ip_sg_rule" {
   type              = "ingress"
   from_port         = 8
@@ -117,6 +117,17 @@ resource "aws_security_group_rule" "ping_public_ip_sg_rule" {
   cidr_blocks       = ["0.0.0.0/0"] #94.70.57.33/32", "79.129.48.158/32", "192.168.30.22/32, "0.0.0.0/0"
   security_group_id = aws_security_group.sg_prod.id
   description       = "allow pinging elastic public ipv4 address of ec2 instance from local machine"
+}
+
+# Create third (inbound) security rule to open MySQL port 3306 for connection between VM and MySQL db
+resource "aws_security_group_rule" "https_outbound_rule_prod" {
+  type              = "ingress"
+  from_port         = 3306
+  to_port           = 3306
+  protocol          = "tcp"
+  cidr_blocks       = ["94.70.57.33/32", "94.70.57.183/32", "79.129.48.158/32"] #aws_vpc.vpc_prod.cidr_block, "0.0.0.0/0"
+  security_group_id = aws_security_group.sg_prod.id
+  description       = "security rule to open port 3306 for inbound connection between VM and MySQL server"
 }
 
 #--------------------------------
@@ -142,6 +153,18 @@ resource "aws_security_group_rule" "https_outbound_rule_prod" {
   cidr_blocks       = ["0.0.0.0/0"] #aws_vpc.vpc_prod.cidr_block, "0.0.0.0/0"
   security_group_id = aws_security_group.sg_prod.id
   description       = "security rule to open port 443 for outbound connection with https from remote server"
+}
+
+# Create third (outbound) security rule to open MySQL port 3306 for connection between VM and MySQL db
+resource "aws_security_group_rule" "https_outbound_rule_prod" {
+  depends_on        = [aws_eip.prod_server_public_ip]
+  type              = "egress"
+  from_port         = 3306
+  to_port           = 3306
+  protocol          = "tcp"
+  cidr_blocks       = [aws_eip.prod_server_public_ip.public_ip] #aws_vpc.vpc_prod.cidr_block, "0.0.0.0/0"
+  security_group_id = aws_security_group.sg_prod.id
+  description       = "security rule to open port 3306 for outbound connection between VM and MySQL server"
 }
 
 # ---------------------------------------- Step 4: SSH key generated for accessing VM ----------------------------------------
@@ -285,15 +308,16 @@ resource "aws_instance" "production_server" {
 		#! /bin/bash
     echo "Installing modules..."
     sudo apt-get update
-    sudo apt-get install -y openjdk-8-jdk
-    sudo apt install -y python2
-    sudo curl https://bootstrap.pypa.io/pip/2.7/get-pip.py --output get-pip.py
-    sudo python2 get-pip.py
-    sudo echo $(python2 --version) & echo $(pip2 --version)
+    sudo apt-get install -y openjdk-11-jdk
+    #sudo apt install -y python2
+    #sudo curl https://bootstrap.pypa.io/pip/2.7/get-pip.py --output get-pip.py
+    #sudo python2 get-pip.py
+    #sudo echo $(python2 --version) & echo $(pip2 --version)
+    sudo apt install -y python3 python3-pip
     sudo apt install -y docker.io
     sudo systemctl start docker
     sudo systemctl enable docker
-    pip install setuptools
+    pip3 install setuptools
     echo "Modules installed via Terraform"
 	EOF
 
