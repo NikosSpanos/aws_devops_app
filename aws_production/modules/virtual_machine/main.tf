@@ -260,7 +260,7 @@ resource "aws_route_table_association" "main-public-1-b" {
 # ---------------------------------------- Step 10: Create the AWS EC2 instance ----------------------------------------
 resource "aws_instance" "production_server" {
   depends_on                  = [aws_eip.prod_server_public_ip, aws_network_interface.network_interface_prod, aws_security_group_rule.ssh_inbound_rule_prod]
-  ami                         = "ami-00399ec92321828f5" #data.aws_ami.ubuntu-server.id, ami-0a5a9780e8617afe7
+  ami                         = "ami-06d79c60d7454e2af" #data.aws_ami.ubuntu-server.id, ami-0a5a9780e8617afe7
   instance_type               = "t2.micro"
   key_name                    = aws_key_pair.generated_key_prod.key_name
 
