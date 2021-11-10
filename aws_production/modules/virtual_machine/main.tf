@@ -157,11 +157,12 @@ resource "aws_security_group_rule" "https_outbound_rule_prod" {
 
 # Create third (outbound) security rule to open MySQL port 3306 for connection between VM and MySQL db
 resource "aws_security_group_rule" "mysql_outbound_rule_prod" {
+  depends_on        = [aws_eip.prod_server_public_ip]
   type              = "egress"
   from_port         = 3306
   to_port           = 3306
   protocol          = "tcp"
-  cidr_blocks       = [aws_eip.prod_server_public_ip.public_ip] #aws_vpc.vpc_prod.cidr_block, "0.0.0.0/0"
+  cidr_blocks       = ["${aws_eip.prod_server_public_ip.public_ip}"] #aws_vpc.vpc_prod.cidr_block, "0.0.0.0/0"
   security_group_id = aws_security_group.sg_prod.id
   description       = "security rule to open port 3306 for outbound connection between VM and MySQL server"
 }
